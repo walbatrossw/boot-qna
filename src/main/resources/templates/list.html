@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bootstrap 101 Template</title>
+<link href="webjars/bootstrap/3.3.7-1/css/bootstrap.min.css" rel="stylesheet">
+<script src="webjars/bootstrap//3.3.7-1/js/bootstrap.min.js"></script>
+<script src="webjars/jquery/3.1.1/jquery.min.js"></script>
+</head>
+<body>
+	<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="/">DoubleS</a>
+			</div>
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="/form.html">회원가입</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div class="container col-xs-8" >
+		<table class="table table-condensed">
+			<caption>사용자 목록</caption>
+			<thead>
+				<tr>
+					<th>사용자 아이디</th>
+					<th>이름</th>
+					<th>이메일</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#users}}
+				<tr>
+					<td>{{userId}}</td>
+					<td>{{name}}</td>
+					<td>{{email}}</td>
+				</tr>
+				{{/users}}
+			</tbody>
+		</table>
+		
+	</div>
+</body>
+</html>

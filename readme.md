@@ -90,7 +90,7 @@
 * git clone 후 빌드
 	* 저장소를 복제
 	```
-	$ git clone git [저장소 주소]
+	$ git clone [git 저장소 주소]
 	```
 	* 저장소를 복제한 곳으로 이동하여 권한 변경 후 빌드
 	```
@@ -102,3 +102,25 @@
 	```
 	$ java -jar [스프링프로젝트명.jar]
 	```
+	
+## slipp 반복주기 2
+* 동적인 HTML 페이지 개발
+* Spring MVC 의 Model, View, Controller 기반 개발
+
+### 2-1 Controller 추가 및 mustache 에 인자 전달
+* Controller 작성 (com.doubles.qna.web) : WelcomeController
+	* welcome() 메서드 추가 : GetMapping, PostMapping 둘다 연습해보기
+* welcome 페이지(templates/welcome.html) 작성 후 mustache 에 값 전달 해보기(get 방식으로)
+	
+### 2-2 회원가입 페이지 구현
+* Controller 작성 (com.doubles.qna.web) : UserController
+	* create() 메서드 추가 : PostMapping
+* User 클래스 작성
+	
+### 2-3 사용자 목록페이지 구현 : inMemory
+* Controller 에 list() 메서드 추가 : GetMapping
+* 회원 목록 페이지 (template/list.html) 작성 후 mustache 에 값 받아오기(get 방식으로)
+* create() 메서드 리턴 값 변경 : list 로 redirect
+
+### 2-4 원격 서버에 소스코드 배포
+### 2-5 이전 상태로 원복 후 반복 구현 
