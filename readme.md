@@ -6,8 +6,14 @@
 * spring boot 프로젝트 생성
 	* web / mustache / dev-tools 선택
 * "Hello World" welcome 페이지 작성 src/main/resources/static
-* live reload chrome extension 설치 : 변경되는 코드를 실시간으로 새로고침없이 바로 확인
-
+* live reload chrome extension 설치 : 변경되는 코드를 실시간으로 새로고침 없이 바로 확인
+* IntelliJ의 경우 `application.properties`에 아래와 같이 설정을 해줘야한다.
+    ```
+    spring.devtools.livereload.enabled=true
+    spring.freemarker.cache=false
+    ```
+    참고URL : http://jojoldu.tistory.com/48
+    
 ### 1-2 부트스트랩을 활용한 html 페이지 개발
 * bootstrap start html 추가
 * bootstrap css 라이브러리 추가
