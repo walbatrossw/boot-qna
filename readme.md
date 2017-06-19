@@ -1,8 +1,8 @@
 # 스프링부트를 기반으로한 QnA 게시판 만들기 연습
 
-## slipp 반복주기 1
+## 1. slipp 반복주기 1
 
-### 1-1 로컬 개발환경 세팅
+### 1-1) 로컬 개발환경 세팅
 * spring boot 프로젝트 생성
 	* web / mustache / dev-tools 선택
 * "Hello World" welcome 페이지 작성 src/main/resources/static
@@ -14,21 +14,21 @@
     ```
     참고URL : http://jojoldu.tistory.com/48
     
-### 1-2 부트스트랩을 활용한 html 페이지 개발
+### 1-2) 부트스트랩을 활용한 html 페이지 개발
 * bootstrap start html 추가
 * bootstrap css 라이브러리 추가
 * jQuery, javascript 라이브러리 추가
 * index.html => navigation bar 추가
 * 회원가입페이지 개발
 
-### 1-3 github에 소스코드 추가
+### 1-3) github에 소스코드 추가
 * sourcetree에 저장소 추가
 * github에 소스코드 추가
 * local => 개발 서버 / 실서버
 * local => git/svn(버전관리 시스템) => 개발 서버/실서버
 * local => github => 개발 서버 / 실서버 
 
-### 1-4 원격서버(개발 서버 또는 실서버)에 소스코드 배포하기1
+### 1-4) 원격서버(개발 서버 또는 실서버)에 소스코드 배포하기1
 * AWS instance 생성하기
 * ssh로 서버 접속
 	```
@@ -61,7 +61,7 @@
 	```
 	$ source .bash_profile
 	```
-### 1-5 원격서버(개발 서버 또는 실서버)에 소스코드 배포하기2
+### 1-5) 원격서버(개발 서버 또는 실서버)에 소스코드 배포하기2
 * 자바 설치
 	* wget으로 jdk 다운로드
 	```
@@ -103,26 +103,26 @@
 	$ java -jar [스프링프로젝트명.jar]
 	```
 	
-## slipp 반복주기 2
+## 2. slipp 반복주기 2
 * 동적인 HTML 페이지 개발
 * Spring MVC 의 Model, View, Controller 기반 개발
 
-### 2-1 Controller 추가 및 mustache 에 인자 전달
+### 2-1) Controller 추가 및 mustache 에 인자 전달
 * Controller 작성 (com.doubles.qna.web) : WelcomeController
 	* welcome() 메서드 추가 : GetMapping, PostMapping 둘다 연습해보기
 * welcome 페이지(templates/welcome.html) 작성 후 mustache 에 값 전달 해보기(get 방식으로)
 	
-### 2-2 회원가입 페이지 구현
+### 2-2) 회원가입 페이지 구현
 * Controller 작성 (com.doubles.qna.web) : UserController
 	* create() 메서드 추가 : PostMapping
 * User 클래스 작성
 	
-### 2-3 사용자 목록페이지 구현 : inMemory
+### 2-3) 사용자 목록페이지 구현 : inMemory
 * Controller 에 list() 메서드 추가 : GetMapping
 * 회원 목록 페이지 (template/list.html) 작성 후 mustache 에 값 받아오기(get 방식으로)
 * create() 메서드 리턴 값 변경 : list 로 redirect
 
-### 2-4 원격 서버에 소스코드 배포
+### 2-4) 원격 서버에 소스코드 배포
 * 원격저장소에서 변경된 소스코드 가져오기
     ```
     $ git pull
@@ -145,4 +145,16 @@
     ```
     $ kill -9 [실행중인 프로그램의 id]
     ```
-### 2-5 이전 상태로 원복 후 반복 구현 
+### 2-5) 이전 상태로 원복 후 반복 구현 
+
+## 3. slipp 반복주기 3
+* 데이터베이스에 사용자 데이터 추가
+* 개인정보 수정 기능 구현
+* 질문하기, 질문목록 기능 구현
+
+### 3-1) QnA HTML 템플릿, H2 데이터베이스 설치, 설정, 관리툴 확인
+### 3-2) 자바 객체와 테이블 매핑, 회원가입 기능 구현
+### 3-3) 개인정보 수정 기능 구현
+### 3-4) 질문하기, 질문목록 기능 구현
+### 3-5) 원격 서버에 소스코드 배포
+

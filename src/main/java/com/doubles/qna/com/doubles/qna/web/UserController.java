@@ -14,13 +14,6 @@ public class UserController {
 
     private List<User> users = new ArrayList<User>();
 
-
-    @RequestMapping("/")
-    public String main() {
-        return "index";
-    }
-
-
     @PostMapping("/create")
     public String create(User user) {
         System.out.println("User : " + user);
