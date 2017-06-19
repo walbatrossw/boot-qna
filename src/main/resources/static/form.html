@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>회원가입</title>
+<link href="webjars/bootstrap/3.3.7-1/css/bootstrap.min.css" rel="stylesheet">
+<script src="webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
+<script src="webjars/jquery/3.1.1/jquery.min.js"></script>
+</head>
+<body>
+	<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="/">DoubleS</a>
+			</div>
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="/form.html">회원가입</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div class="container col-xs-8" >
+		<h1>회원가입 페이지</h1>
+		<form>
+			<div class="form-group">
+			<label for="userid">아이디</label>
+			<input type="text" class="form-control" id="userId" placeholder="아이디를 입력해주세요">
+		</div>
+		<div class="form-group">
+			<label for="password">비밀번호</label>
+			<input type="password" class="form-control" id="password" placeholder="비밀번호를 입력해주세요">
+		</div>
+		<div class="form-group">
+			<label for="password">비밀번호 확인</label>
+			<input type="password" class="form-control" id="password2" placeholder="비밀번호를 확인해주세요">
+		</div>
+		<div class="form-group">
+			<label for="username">이름</label>
+			<input type="text" class="form-control" id="userName" placeholder="이름을 입력해주세요">
+		</div>
+		<div class="form-group">
+			<label for="userEmail">메일주소</label>
+			<input type="email" class="form-control" id="userEmail" placeholder="메일주소를 입력해주세요">
+		</div>
+			<button type="submit" class="btn btn-default">가입하기</button>
+		</form>
+	</div>
+</body>
+</html>
