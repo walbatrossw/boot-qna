@@ -153,8 +153,82 @@
 * 질문하기, 질문목록 기능 구현
 
 ### 3-1) QnA HTML 템플릿, H2 데이터베이스 설치, 설정, 관리툴 확인
+* QnA 템플릿 추가
+    * 참고 github : https://github.com/walbatrossw/web-application-server
+* H2 데이터베이스 설치
+    * `pom.xml`에 h2 database engine 의존성 추가
+    * `<scope>test</scope>`를 `runtime`으로 변경
+    ```xml
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>1.4.193</version>
+        <scope>runtime</scope>
+    </dependency>
+    ```
+    * `application.properties`에 H2 데이터베이스 설정 추가
+        ```
+        spring.datasource.driver-class-name=org.h2.Driver
+        spring.datasource.url=jdbc:h2:~/boot-qna;AUTO_SERVER=TRUE
+        spring.datasource.username=sa
+        spring.datasource.password=
+        spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+        ```
 ### 3-2) 자바 객체와 테이블 매핑, 회원가입 기능 구현
-### 3-3) 개인정보 수정 기능 구현
-### 3-4) 질문하기, 질문목록 기능 구현
+* spring-starter-data-jpa 의존성 추가
+    ```xml
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    ```
+* domain 패키지 추가
+    * web 패키지에 있던 User 클래스를 domain 패키지로 이동
+    * User 클래스에 annotation 추가
+        * `@Entity` : Entity 클래스라는 것을 나타내는 애너테이션 (반드시 필요)
+        * `@Table(name="테이블명")` : Entity 클래스에 할당되는 테이블을 지정 (생략가능)
+        * `@Id` : primary key 설정 (반드시 필요)
+        * `@GenerateValue` : primary key 자동생성
+        * `@Column` : 해당 필드에 할당할 칼럼을 지정 (생략가능)
+            1.  `name` - 칼럼명 지정 
+            2. `length` - 최대 길이를 지정
+            3. `nullable` - null 의 허용여부 지정(true, false)
+
+* repository 인터페이스 작성
+    * 아래와 같이 작성한다.
+    ```java
+    public interface UserRepository extends JpaRepository<User, Long>{
+    }
+    ```
+* Controller 변경
+    * `@Autowired` 애너테이션을 통해 UserRepository 인스턴스를 필드와 연동
+        * `@Autowired` : 애플리케이션에 있는 Bean 객체와 연동하기 위한 애너테이션
+    ```java
+    @Autowired
+    private UserRepository userRepository;
+    ```
+    
+    * create() 메서드 : 회원가입
+    ```java
+    @PostMapping("/create")
+    public String create(User user) {
+        userRepository.save(user);
+        return "redirect:list";
+    }
+    ```
+    * list() 메서드 : 회원목록
+    ```java
+    @GetMapping("/list")
+    public String list(Model model) {
+        model.addAttribute("users", userRepository.findAll());
+        return "list";
+    }
+    ```
+
+    
+### 3-3) HTML 정리, URL 정리
+
+### 3-4) 개인정보 수정 기능 구현
+
 ### 3-5) 원격 서버에 소스코드 배포
 

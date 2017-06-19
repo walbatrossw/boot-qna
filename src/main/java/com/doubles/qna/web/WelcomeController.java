@@ -1,4 +1,4 @@
-package com.doubles.qna.com.doubles.qna.web;
+package com.doubles.qna.web;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
