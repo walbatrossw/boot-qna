@@ -158,14 +158,14 @@
 * H2 데이터베이스 설치
     * `pom.xml`에 h2 database engine 의존성 추가
     * `<scope>test</scope>`를 `runtime`으로 변경
-    ```xml
-    <dependency>
-        <groupId>com.h2database</groupId>
-        <artifactId>h2</artifactId>
-        <version>1.4.193</version>
-        <scope>runtime</scope>
-    </dependency>
-    ```
+        ```xml
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.193</version>
+            <scope>runtime</scope>
+        </dependency>
+        ```
     * `application.properties`에 H2 데이터베이스 설정 추가
         ```
         spring.datasource.driver-class-name=org.h2.Driver
@@ -196,38 +196,132 @@
 
 * repository 인터페이스 작성
     * 아래와 같이 작성한다.
-    ```java
-    public interface UserRepository extends JpaRepository<User, Long>{
-    }
-    ```
+        ```java
+        public interface UserRepository extends JpaRepository<User, Long> {
+        
+        }
+        ```
 * Controller 변경
     * `@Autowired` 애너테이션을 통해 UserRepository 인스턴스를 필드와 연동
         * `@Autowired` : 애플리케이션에 있는 Bean 객체와 연동하기 위한 애너테이션
-    ```java
-    @Autowired
-    private UserRepository userRepository;
-    ```
+        ```java
+        @Autowired
+        private UserRepository userRepository;
+        ```
     
     * create() 메서드 : 회원가입
-    ```java
-    @PostMapping("/create")
-    public String create(User user) {
-        userRepository.save(user);
-        return "redirect:list";
-    }
-    ```
+        ```java
+        @PostMapping("/create")
+        public String create(User user) {
+            userRepository.save(user);
+            return "redirect:list";
+        }
+        ```
     * list() 메서드 : 회원목록
-    ```java
-    @GetMapping("/list")
-    public String list(Model model) {
-        model.addAttribute("users", userRepository.findAll());
-        return "list";
-    }
-    ```
+        ```java
+        @GetMapping("/list")
+        public String list(Model model) {
+            model.addAttribute("users", userRepository.findAll());
+            return "list";
+        }
+        ```
 
 ### 3-3) HTML 정리, URL 정리
+* HTML 템플릿 정리
+    ```
+    └── resources :  
+            └── static : 정적 파일
+            |       ├── css : css 파일
+            |       ├── font :  font 파일
+            |       ├── images : image 파일
+            |       └── js : js 파일
+            └── templates : 동적 파일
+                    ├── ex : 기존의 연습한 파일들
+                    ├── include : HTML 중복코드 정리 (navigation, header, footer)
+                    ├── qna : QnA 게시판 관련 HTML
+                    └── user : 회원가입 관련 HTML
+    ```
+    * html 중복코드를 정리하기 위해 include 폴더에 navigation, header, footer html파일 작성
+        * mustache 템플릿의 include 방법
+            ```
+            {{> /include/header}}
+            {{> /include/navigation}}
+            {{> /include/footer}}
+            ```
+* URL 정리
+    * UserController 
+        * 회원관련 모든 URL 에 `/users`가 추가될 수 있도록`@Controller` 애너테이션 하단에 `@RequestMapping("/users")` 추가
+        * 회원가입 처리 후 리스트로 redirect 하기 위해서 `redierct:/users/list` 로 변경
 
 ### 3-4) 개인정보 수정 기능 구현
+* UserController 에 회원정보 수정화면, 수정처리 메서드 추가
+    * 회원정보 수정화면
+        ```java
+        @GetMapping("/{id}/form")
+        public String updateForm(@PathVariable Long id, Model model) {
+            User user = userRepository.findOne(id);
+            model.addAttribute("user", user);
+            return "/user/updateForm";
+        }
+        ```
+    * 회원정보 수정처리
+        ```java
+        @PutMapping("/{id}")
+        public String update(@PathVariable Long id, User updatedUser) {
+            User user = userRepository.findOne(id); // 기존의 아이디 정보를 조회
+            user.update(updatedUser);   // 아이디의 정보 변경
+            userRepository.save(user);  // 변경된 정보를 저장
+            return "redirect:/users/list";
+        }
+        ```
+* User 클래스에 update() 메서드 추가 : email, name, password 만 변경
+    ```java
+    public void update(User updatedUser) {
+            this.email = updatedUser.email;
+            this.name = updatedUser.name;
+            this.password = updatedUser.password;
+        }
+    ```
+* updateForm.html 작성 : 회원정보 수정 화면
+    
+    ```xml
+    <div class="container" id="main">
+        <div class="col-md-6 col-md-offset-3">
+            <div class="panel panel-default content-main">
+                {{#user}}
+                <form name="question" method="post" action="/users/{{id}}">
+                    <input type="hidden" name="_method" value="put"> <!--@PutMapping 을 사용하기 위한 방법-->
+                    <div class="form-group">
+                        <label for="userId">사용자 아이디</label>
+                        <input class="form-control" id="userId" name="userId" value="{{userId}}" placeholder="User ID" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">비밀번호</label>
+                        <input type="password" class="form-control" id="password" name="password" value="{{password}}" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">비밀번호 확인</label>
+                        <input type="password" class="form-control" id="password2" name="password" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <label for="name">이름</label>
+                        <input class="form-control" id="name" name="name" value="{{name}}" placeholder="Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">이메일</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{email}}" placeholder="Email">
+                    </div>
+                    <button type="submit" class="btn btn-success clearfix pull-right">개인정보 수정</button>
+                    <div class="clearfix"/>
+                </form>
+                {{/user}}
+            </div>
+        </div>
+    </div>
+    ```
+    
+    * html 에서는 get, post 만 사용할 수 있는데 put 을 사용하기 위한 방법
+        * `<input type="hidden" name="_method" value="put">`
 
 ### 3-5) 원격 서버에 소스코드 배포
 

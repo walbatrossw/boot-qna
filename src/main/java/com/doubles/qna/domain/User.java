@@ -10,8 +10,11 @@ public class User {
 
     @Column(nullable = false, length = 20)
     private String userId;
+    @Column(nullable = false)
     private String password;
+    @Column(nullable = false)
     private String name;
+    @Column(nullable = false)
     private String email;
 
     public Long getId() {
@@ -54,6 +57,13 @@ public class User {
         this.email = email;
     }
 
+    public void update(User updatedUser) {
+        this.email = updatedUser.email;
+        this.name = updatedUser.name;
+        this.password = updatedUser.password;
+    }
+
+
     @Override
     public String toString() {
         return "User{" +
@@ -64,4 +74,5 @@ public class User {
                 ", email='" + email + '\'' +
                 '}';
     }
+
 }
