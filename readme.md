@@ -331,3 +331,52 @@
             ```
             $ ./mvnw spring-boot:run &
             ```
+
+
+## 4. slipp 반복주기 4
+* 로그인 기능 구현, 쿠키와 세션에 대한 이해
+* 로그인 사용자에 대한 접근 제한
+
+### 4-1) 로그인 기능 구현
+* UserController : 로그인 관련 메서드 추가
+    * 로그인 화면 매핑
+    ```java
+    @GetMapping("/loginForm")
+    public String loginForm() {
+        return "/user/login";
+    }
+    ```
+    * 로그인 처리
+    ```java
+    @PostMapping("/login")
+    public String login(String userId, String password, HttpSession session) {
+        User user = userRepository.findByUserId(userId);
+
+        if ( user == null ) {
+            System.out.println("login failure");
+            return "redirect:/users/loginForm";
+        }
+
+        if ( !password.equals(user.getPassword()) ) {
+            System.out.println("login failure");
+            return "redirect:/users/loginForm";
+        }
+
+        session.setAttribute("user", user);
+        System.out.println("login success");
+        return "redirect:/";
+    }
+    ```
+* UserRepository : userId 로 하나의 회원을 조회하는 메서드 작성
+    ```java
+    @Repository
+    public interface UserRepository extends JpaRepository<User, Long>{
+        // User 타입의 userId로 조회
+        User findByUserId(String userId);
+    }
+    ```
+
+### 4-2) 로그인 상태에 따른 메뉴 처리 및 로그아웃
+### 4-3) 로그인 사용자에 한해 자신의 정보를 수정하도록 수정
+### 4-4) 질문하기, 질문 목록 기능 구현
+### 4-5) 원격 서버에 소스코드 배포

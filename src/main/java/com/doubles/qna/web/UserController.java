@@ -2,15 +2,21 @@ package com.doubles.qna.web;
 
 import com.doubles.qna.domain.User;
 import com.doubles.qna.domain.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpSession;
+
 
 @Controller
 @RequestMapping("/users")
 public class UserController {
+
+    private final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -36,12 +42,29 @@ public class UserController {
     }
 
     // 로그인 화면
-    @GetMapping("/login")
-    public String login() {
+    @GetMapping("/loginForm")
+    public String loginForm() {
         return "/user/login";
     }
 
     // 로그인 처리
+    @PostMapping("/login")
+    public String login(String userId, String password, HttpSession session) {
+        User user = userRepository.findByUserId(userId);
+
+        if ( user == null ) {
+            return "redirect:/users/loginForm";
+        }
+
+        if ( !password.equals(user.getPassword()) ) {
+            System.out.println("login failure");
+            return "redirect:/users/loginForm";
+        }
+
+        session.setAttribute("user", user);
+        System.out.println("login success");
+        return "redirect:/";
+    }
 
     // 회원 정보수정 화면
     @GetMapping("/{id}/form")

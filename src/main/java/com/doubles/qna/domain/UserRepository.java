@@ -5,4 +5,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>{
+    // User 타입의 userId로 조회
+    User findByUserId(String userId);
 }
