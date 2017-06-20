@@ -324,4 +324,10 @@
         * `<input type="hidden" name="_method" value="put">`
 
 ### 3-5) 원격 서버에 소스코드 배포
-
+* 원격 서버에 배포한 뒤 include 한 파일을 찾지 못하는 문제가 발생
+    * 원인 : mustache 템플릿 엔진 문제로 추정
+    * 해결 방법
+        * jar 파일이 아닌 maven 에서 spring-boot 프로젝트 실행하기
+            ```
+            $ ./mvnw spring-boot:run &
+            ```
