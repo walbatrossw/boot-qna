@@ -377,6 +377,45 @@
     ```
 
 ### 4-2) 로그인 상태에 따른 메뉴 처리 및 로그아웃
+* 로그인 상태에서 메뉴 처리
+    * mustache 템플릿 엔진 if else 문으로 처리하기
+        * session 에 user 가 없으면 로그인, 회원가입 메뉴
+        * session 에 user 가 있으면 로그아웃, 개인정보수정 메뉴
+            ```xml
+            <div class="collapse navbar-collapse" id="navbar-collapse2">
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="active"><a href="/">Posts</a></li>
+                    {{^user}}
+                    <li><a href="/users/loginForm" role="button">로그인</a></li>
+                    <li><a href="/users/form" role="button">회원가입</a></li>
+                    {{/user}}
+                    {{#user}}
+                    <li><a href="/users/logout" role="button">로그아웃</a></li>
+                    <li><a href="/users/update" role="button">개인정보수정</a></li>
+                    {{/user}}
+                </ul>
+            </div>
+            ```
+        참고 URL : https://mustache.github.io/mustache.5.html, Inverted Sections 를 참고
+        
+    * 로그인시 메뉴 처리가 되지않는 문제 발생
+        * `application.properties` 에 mustache 템플릿 session 관련 설정하기
+             ```
+             spring.mustache.expose-session-attributes=true   
+             ```
+            참고 URL : https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html, MUSTACHE TEMPLATES 를 참고
+
+* 로그아웃 처리
+    * UserController : logout() 메서드 추가, 세션에 담긴 user 를 제거
+        ```java
+        @GetMapping("/logout")
+        public String logout(HttpSession session) {
+            session.removeAttribute("user");
+            System.out.println("logout success");
+            return "redirect:/";
+        }
+        ```
+    
 ### 4-3) 로그인 사용자에 한해 자신의 정보를 수정하도록 수정
 ### 4-4) 질문하기, 질문 목록 기능 구현
 ### 4-5) 원격 서버에 소스코드 배포

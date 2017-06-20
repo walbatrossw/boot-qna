@@ -66,6 +66,15 @@ public class UserController {
         return "redirect:/";
     }
 
+    // 로그아웃 처리
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        // 세션에 담기 user 를 제거
+        session.removeAttribute("user");
+        System.out.println("logout success");
+        return "redirect:/";
+    }
+
     // 회원 정보수정 화면
     @GetMapping("/{id}/form")
     public String updateForm(@PathVariable Long id, Model model) {
