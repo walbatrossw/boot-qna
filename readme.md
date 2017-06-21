@@ -736,9 +736,68 @@
         ```
     
     * form.html : 질문하기 작성 화면 (resources/template/qna)
-    
+        ```xml
+        <div class="container" id="main">
+            <div class="col-md-12 col-sm-12 col-lg-10 col-lg-offset-1">
+                <div class="panel panel-default content-main">
+                    <form name="question" method="post" action="/questions">
+                        <div class="form-group">
+                            <label for="title">제목</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="제목"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="contents">내용</label>
+                            <textarea name="contents" id="contents" rows="5" class="form-control"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success clearfix pull-right">질문하기</button>
+                        <div class="clearfix"/>
+                    </form>
+                </div>
+            </div>
+        </div>
+        ```
 
 * 질문 목록
+    * HomeController : home() 메서드 수정
+        ```java
+        @Controller
+        public class HomeController {
+        
+            @Autowired
+            private QuestionRepository questionRepository;
+        
+            @GetMapping("/")
+            public String home(Model model) {
+                model.addAttribute("questions", questionRepository.findAll());
+                return "index";
+            }
+        
+        }
+        ```
+    * index.html 수정 : 글작성 시간 및 댓글 갯수는 추후 구현 예정
+        ```xml
+        {{#questions}}
+        <li>
+            <div class="wrap">
+                <div class="main">
+                    <strong class="subject">
+                        <a href="../static/qna/show.html">{{title}}</a>
+                    </strong>
+                    <div class="auth-info">
+                        <i class="icon-add-comment"></i>
+                        <span class="time">2016-01-15 18:47</span>
+                        <a href="../static/user/profile.html" class="author">{{contents}}</a>
+                    </div>
+                    <div class="reply" title="댓글">
+                        <i class="icon-reply"></i>
+                        <span class="point">8</span>
+                    </div>
+                </div>
+            </div>
+        </li>
+        {{/questions}}
+        ```
+
 ### 4-5) 원격 서버에 소스코드 배포
 
 - - -
