@@ -669,7 +669,76 @@
         spring.jpa.properties.hibernate.format_sql=true
         ```
 ### 4-5) 질문하기, 질문 목록 기능 구현
+* 질문하기
+    * QuestionController 작성 : (com.doubles.qna.web)
+        ```java
+        @Controller
+        @RequestMapping("/questions")
+        public class QuestionController {
+        
+            @Autowired
+            private QuestionRepository questionRepository;
+        
+            // 게시글 작성 화면
+            @GetMapping("/form")
+            public String question(HttpSession session) {
+                // 로그인되어 있지 않으면 로그인 페이지로
+                if ( !HttpSessionUtils.isLoginUser(session)) {
+                    return "redirect:/users/loginForm";
+                }
+                return "/qna/form";
+            }
+        
+            // 게시글 작성 처리
+            @PostMapping
+            public String create(String title, String contents, HttpSession session) {
+                // 로그인되어 있지 않으면 로그인 페이지로
+                if ( !HttpSessionUtils.isLoginUser(session) ) {
+                    return "redirect:/users/loginForm";
+                }
+                // 현재 로그인되어 있는 회원의 정보를 sessionUser 에 복사
+                User sessionUser = HttpSessionUtils.getUserFromSession(session);
+        
+                Question newQuestion = new Question(sessionUser.getUserId(), title, contents);
+                questionRepository.save(newQuestion);
+                return "redirect:/";
+            }
+        }
+        ```
+    * Question 클래스 작성 : (com.doubles.qna.domain)
+        ```java
+        @Entity
+        public class Question {
+            @Id
+            @GeneratedValue
+            private Long id;
+        
+            private String writer;
+            private String title;
+            private String contents;
+        
+            public Question() {
+            }
+        
+            public Question(String writer, String title, String contents) {
+                this.writer = writer;
+                this.title = title;
+                this.contents = contents;
+            }
+        }
+        ```
+    * QuestionRepository 인터페이스 작성 : (com.doubles.qna.domain)
+        ```java
+        @Repository
+        public interface QuestionRepository extends JpaRepository<Question, Long>{
+        
+        }
+        ```
+    
+    * form.html : 질문하기 작성 화면 (resources/template/qna)
+    
 
+* 질문 목록
 ### 4-5) 원격 서버에 소스코드 배포
 
 - - -
