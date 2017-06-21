@@ -521,8 +521,184 @@
             }
             ```
 
-### 4-4) 질문하기, 질문 목록 기능 구현
+### 4-4) 중복 제거 및 읽기 좋은 코드를 위한 리팩토링
+* UserController 중복 코드 제거
+    * session 처리를 담당하는 Util 클래스 작성 : HttpSessionUtils (com.doubles.qna.web)
+        ```java
+        public class HttpSessionUtils {
+        
+            // session 의 key 값을 상수로 변경
+            public static final String USER_SESSION_KEY = "sessionUser";
+        
+            // session 에 로그인된 유저의 존재 여부 판별하는 메서드
+            public static boolean isLoginUser(HttpSession session) {
+                // session 에서 값을 꺼내면 Object 타입으로 리턴하게 되므로 User 타입이 아닌 Object 타입으로 변수선언
+                Object sessionUser = session.getAttribute(USER_SESSION_KEY);
+                // session 값이 null 이면 false 리턴
+                if ( sessionUser == null ) {
+                    return false;
+                }
+          
+                return true;
+            }
+            
+            // session 에 저장된 값을 가져오는 메서드
+            public static User getUserFromSession(HttpSession session) {
+                if ( !isLoginUser(session) ) {
+                    return null;
+                }
+        
+                return (User)session.getAttribute(USER_SESSION_KEY);
+            }
+        }
+        ```
+    * UserController 수정
+        * 로그인 처리
+            ```java
+            @PostMapping("/login")
+            public String login(String userId, String password, HttpSession session) {
+        
+                User user = userRepository.findByUserId(userId);
+        
+                if ( user == null ) {
+                    System.out.println("login failure");
+                    return "redirect:/users/loginForm";
+                }
+        
+                // 로그인 시 password 값과 조회하려는 password 값 비교 <-- 변경
+                if ( !user.matchPassword(password) ) {
+                    System.out.println("login failure");
+                    return "redirect:/users/loginForm";
+                }
+                
+                session.setAttribute(HttpSessionUtils.USER_SESSION_KEY, user); // <-- 변경
+                System.out.println("login success");
+                return "redirect:/";
+            }
+            ```
+        * 로그아웃 처리
+            ```java
+            @GetMapping("/logout")
+            public String logout(HttpSession session) {
+                // 세션에 담기 user 를 제거 <-- 변경
+                session.removeAttribute(HttpSessionUtils.USER_SESSION_KEY);
+                System.out.println("logout success");
+                return "redirect:/";
+            }
+            ```
+            
+        * 회원 정보수정 화면
+            ```java
+            @GetMapping("/{id}/form")
+            public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
+        
+                // session 값이 null 이면 로그인 페이지로 redirect <-- 변경
+                if ( !HttpSessionUtils.isLoginUser(session) ) {
+                    return "redirect:/users/loginForm";
+                }
+        
+                // session 에 저장된 값을 sessionUser 에 복사 <-- 변경
+                User sessionUser = HttpSessionUtils.getUserFromSession(session);
+                // session 에 저장된 id 값과 조회하려는 id값 비교 <-- 변경
+                if ( !sessionUser.matchId(id) ) {
+                    throw new IllegalStateException("Can't modify other's information");
+                }
+        
+                // session 에 저장된 자신의 정보만 조회할 수 있도록 처리
+                User user = userRepository.findOne(id);
+                model.addAttribute("user", user);
+                return "/user/updateForm";
+            }
+            ```
+            
+        * 회원 정보수정 처리
+            ```java
+            @PutMapping("/{id}")
+            public String update(@PathVariable Long id, User updatedUser, HttpSession session) {
+        
+                // session 값이 null 이면 로그인 페이지로 redirect
+                if ( !HttpSessionUtils.isLoginUser(session) ) {
+                    return "redirect:/users/loginForm";
+                }
+        
+                // session 에 저장된 값을 sessionUser 에 복사  <-- 변경
+                User sessionUser = HttpSessionUtils.getUserFromSession(session);
+                // session 에 저장된 id 값과 조회하려는 id값 비교 <-- 변경
+                if ( !sessionUser.matchId(id) ) {
+                    throw new IllegalStateException("Can't modify other's information");
+                }
+        
+                User user = userRepository.findOne(id); // 기존의 아이디 정보를 조회
+                user.update(updatedUser);   // 아이디의 정보 변경
+                userRepository.save(user);  // 변경된 정보를 저장
+                return "redirect:/users/list";
+            }  
+            ```
+    
+    
+* User 클래스 수정 : id, password get() 메서드 제거하고 아래의 메서드로 변경
+    * User 가 가지고 있는 변수 값을 get() 메서드로 값을 꺼내서 Controller 에서 비교하는 것보다는 
+    객체 클래스에서 직접 값을 비교하고 결과값을 리턴하도록 만드는 것이 좋다. 
+    객체지향적으로 코드를 작성하려면 private 으로 캡슐화 되어 있는 변수의 값을 외부에 노출시키는 것은 바람직 하지 않기 때문이다.
+    
+    * 아이디 일치확인 메서드
+        ```java
+        public boolean matchId(Long newId) {
+            if ( newId == null ) {
+                return false;
+            }
+            return newId.equals(id);
+        }
+        ```
+    * 비밀번호 일치확인 매서드
+        ```java
+        public boolean matchPassword(String newPassword) {
+            if ( newPassword == null ) {
+                return false;
+            }
+            return newPassword.equals(password);
+        }
+        ```
+
+
+* JPA Console 창에 SQL Query 보기 설정
+    * `application.properties` 에 아래와 같이 설정
+        ```
+        spring.jpa.show-sql=true
+        spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+        spring.jpa.properties.hibernate.format_sql=true
+        ```
+### 4-5) 질문하기, 질문 목록 기능 구현
 
 ### 4-5) 원격 서버에 소스코드 배포
 
 - - -
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

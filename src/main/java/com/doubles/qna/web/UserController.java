@@ -50,18 +50,21 @@ public class UserController {
     // 로그인 처리
     @PostMapping("/login")
     public String login(String userId, String password, HttpSession session) {
+
         User user = userRepository.findByUserId(userId);
 
         if ( user == null ) {
-            return "redirect:/users/loginForm";
-        }
-
-        if ( !password.equals(user.getPassword()) ) {
             System.out.println("login failure");
             return "redirect:/users/loginForm";
         }
 
-        session.setAttribute("sessionUser", user);
+        // 로그인 시 password 값과 조회하려는 password 값 비교
+        if ( !user.matchPassword(password) ) {
+            System.out.println("login failure");
+            return "redirect:/users/loginForm";
+        }
+
+        session.setAttribute(HttpSessionUtils.USER_SESSION_KEY, user);
         System.out.println("login success");
         return "redirect:/";
     }
@@ -70,7 +73,7 @@ public class UserController {
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         // 세션에 담기 user 를 제거
-        session.removeAttribute("sessionUser");
+        session.removeAttribute(HttpSessionUtils.USER_SESSION_KEY);
         System.out.println("logout success");
         return "redirect:/";
     }
@@ -79,21 +82,20 @@ public class UserController {
     @GetMapping("/{id}/form")
     public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
 
-        // session 에서 값을 꺼내면 Object 타입으로 리턴하게 되므로 User 타입이 아닌 Object 타입으로 변수선언
-        Object tempUser = session.getAttribute("sessionUser");
-        // session 이 null 이면 로그인페이지로 리다이렉트
-        if ( tempUser == null ) {
+        // session 값이 null 이면 로그인 페이지로 redirect
+        if ( !HttpSessionUtils.isLoginUser(session) ) {
             return "redirect:/users/loginForm";
         }
 
-        // session 에 저장된 id와 일치하지 않는 회원정보 수정화면으로 접근 금지
-        User sessionUser = (User)tempUser;
-        if ( !id.equals(sessionUser.getId()) ) {
+        // session 에 저장된 값을 sessionUser 에 복사
+        User sessionUser = HttpSessionUtils.getUserFromSession(session);
+        // session 에 저장된 id 값과 조회하려는 id값 비교
+        if ( !sessionUser.matchId(id) ) {
             throw new IllegalStateException("Can't modify other's information");
         }
 
         // session 에 저장된 자신의 정보만 조회할 수 있도록 처리
-       User user = userRepository.findOne(sessionUser.getId());
+        User user = userRepository.findOne(id);
         model.addAttribute("user", user);
         return "/user/updateForm";
     }
@@ -102,20 +104,19 @@ public class UserController {
     @PutMapping("/{id}")
     public String update(@PathVariable Long id, User updatedUser, HttpSession session) {
 
-        // session 에서 값을 꺼내면 Object 타입으로 리턴하게 되므로 User 타입이 아닌 Object 타입으로 변수선언
-        Object tempUser = session.getAttribute("sessionUser");
-        // session 이 null 이면 로그인페이지로 리다이렉트
-        if ( tempUser == null ) {
+        // session 값이 null 이면 로그인 페이지로 redirect
+        if ( !HttpSessionUtils.isLoginUser(session) ) {
             return "redirect:/users/loginForm";
         }
 
-        // session 에 저장된 id와 일치하지 않는 회원정보 수정처리 금지
-        User sessionUser = (User)tempUser;
-        if ( !id.equals(sessionUser.getId()) ) {
+        // session 에 저장된 값을 sessionUser 에 복사
+        User sessionUser = HttpSessionUtils.getUserFromSession(session);
+        // session 에 저장된 id 값과 조회하려는 id값 비교
+        if ( !sessionUser.matchId(id) ) {
             throw new IllegalStateException("Can't modify other's information");
         }
 
-        User user = userRepository.findOne(sessionUser.getId()); // 기존의 아이디 정보를 조회
+        User user = userRepository.findOne(id); // 기존의 아이디 정보를 조회
         user.update(updatedUser);   // 아이디의 정보 변경
         userRepository.save(user);  // 변경된 정보를 저장
         return "redirect:/users/list";
