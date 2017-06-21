@@ -102,6 +102,8 @@
 	```
 	$ java -jar [스프링프로젝트명.jar]
 	```
+
+- - -
 	
 ## 2. slipp 반복주기 2
 * 동적인 HTML 페이지 개발
@@ -146,6 +148,8 @@
     $ kill -9 [실행중인 프로그램의 id]
     ```
 ### 2-5) 이전 상태로 원복 후 반복 구현 
+
+- - -
 
 ## 3. slipp 반복주기 3
 * 데이터베이스에 사용자 데이터 추가
@@ -332,6 +336,7 @@
             $ ./mvnw spring-boot:run &
             ```
 
+- - -
 
 ## 4. slipp 반복주기 4
 * 로그인 기능 구현, 쿠키와 세션에 대한 이해
@@ -416,6 +421,108 @@
         }
         ```
     
-### 4-3) 로그인 사용자에 한해 자신의 정보를 수정하도록 수정
+### 4-3) 로그인 사용자에 한해 자신의 정보를 수정하도록 처리
+* 로그인 -> 자신의 정보 수정 페이지로 이동
+    * `navigation.html` 상단 메뉴바의 개인정보수정 `a` 태그 수정
+        ```xml
+        <li><a href="/users/{{id}}/form" role="button">개인정보수정</a></li>
+        ```
+    * 500 에러 발생 : Cannot expose session attribute 'user' because of an existing model object of the same name
+        * 원인 : session 의 key 값이 user 이고, model 의 key 값도 user 라서 충돌이 발생
+        * 해결 : session 의 key 값을 sessionUser 로 변경
+            * navigation.html
+                ```xml
+                {{^sessionUser}}
+                <li><a href="/users/loginForm" role="button">로그인</a></li>
+                <li><a href="/users/form" role="button">회원가입</a></li>
+                {{/sessionUser}}
+                {{#sessionUser}}
+                <li><a href="/users/logout" role="button">로그아웃</a></li>
+                <li><a href="/users/update" role="button">개인정보수정</a></li>
+                {{/sessionUser}}
+                ```
+            * UserController
+                ```java
+                @PostMapping("/login")
+                public String login(String userId, String password, HttpSession session) {
+                    User user = userRepository.findByUserId(userId);
+            
+                    if ( user == null ) {
+                        return "redirect:/users/loginForm";
+                    }
+            
+                    if ( !password.equals(user.getPassword()) ) {
+                        System.out.println("login failure");
+                        return "redirect:/users/loginForm";
+                    }
+                    // key값을 sessionUser로 변경
+                    session.setAttribute("sessionUser", user);
+                    System.out.println("login success");
+                    return "redirect:/";
+                }
+            
+                @GetMapping("/logout")
+                public String logout(HttpSession session) {
+                    // key값을 sessionUser로 변경
+                    session.removeAttribute("sessionUser");
+                    System.out.println("logout success");
+                    return "redirect:/";
+                }
+                ```
+    * 개인정보 수정화면 및 수정처리
+        * 본인의 개인정보만 접근이 가능하도록 구현
+            ```java
+            // 회원 정보수정 화면
+            @GetMapping("/{id}/form")
+            public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
+        
+                // session 에서 값을 꺼내면 Object 타입으로 리턴하게 되므로 User 타입이 아닌 Object 타입으로 변수선언
+                Object tempUser = session.getAttribute("sessionUser");
+                // session 이 null 이면 로그인페이지로 리다이렉트
+                if ( tempUser == null ) {
+                    return "redirect:/users/loginForm";
+                }
+        
+                // session 에 저장된 id와 일치하지 않는 회원정보 수정화면으로 접근 금지
+                User sessionUser = (User)tempUser;
+                if ( !id.equals(sessionUser.getId()) ) {
+                    throw new IllegalStateException("Can't modify other's information");
+                }
+        
+                // session 에 저장된 자신의 정보만 조회할 수 있도록 처리
+               User user = userRepository.findOne(sessionUser.getId());
+                model.addAttribute("user", user);
+                return "/user/updateForm";
+            }
+            ```
+        
+            ```java
+            // 회원 정보수정 처리
+            @PutMapping("/{id}")
+            public String update(@PathVariable Long id, User updatedUser, HttpSession session) {
+        
+                // session 에서 값을 꺼내면 Object 타입으로 리턴하게 되므로 User 타입이 아닌 Object 타입으로 변수선언
+                Object tempUser = session.getAttribute("sessionUser");
+                // session 이 null 이면 로그인페이지로 리다이렉트
+                if ( tempUser == null ) {
+                    return "redirect:/users/loginForm";
+                }
+        
+                // session 에 저장된 id와 일치하지 않는 회원정보 수정처리 금지
+                User sessionUser = (User)tempUser;
+                if ( !id.equals(sessionUser.getId()) ) {
+                    throw new IllegalStateException("Can't modify other's information");
+                }
+        
+                User user = userRepository.findOne(sessionUser.getId()); // 기존의 아이디 정보를 조회
+                user.update(updatedUser);   // 아이디의 정보 변경
+                userRepository.save(user);  // 변경된 정보를 저장
+                return "redirect:/users/list";
+            }
+            ```
+
 ### 4-4) 질문하기, 질문 목록 기능 구현
+
 ### 4-5) 원격 서버에 소스코드 배포
+
+- - -
