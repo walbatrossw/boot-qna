@@ -831,7 +831,50 @@
         * `configure()` 메서드를 오버라이딩
             * 기존에 초기화 작업를 담당했던 `BootQnaApplication` 클래스를 등록 설정하여 초기화 작업을 수행할 수 있도록 해준다.
         
-
+* 배포 서버에 tomcat 설치
+    * http://tomcat.apache.org/download-80.cgi 로 접속
+    * tar.gz 파일을 링크주소 복사 ex) http://apache.tt.co.kr/tomcat/tomcat-8/v8.5.15/bin/apache-tomcat-8.5.15.tar.gz
+    * 배포 서버로 tomcat 다운로드
+        ```
+        $ wget http://apache.tt.co.kr/tomcat/tomcat-8/v8.5.15/bin/apache-tomcat-8.5.15.tar.gz
+        ```
+    * 다운로드 받은 tomcat 압축풀기
+        ```
+        $ tar -xvf apache-tomcat-8.5.15.tar.gz
+        ```
+    * tomcat 폴더의 실제 물리적 경로를 tomcat 심볼릭 링크로 설정
+        ```
+        $  ln -s apache-tomcat-8.5.15 tomcat
+        ```
+    * tomcat 서버 구동하기 : tomcat/bin 으로 이동하여 startup.sh 파일을 실행
+        ```
+        $ ./startup.sh
+        ```
+    * tomcat 서버 정지하기 : tomcat/bin 으로 이동하여 shutdown.sh 파일을 실행    
+        
+    * tomcat 서버로 접속하기 : tomcat 서버의 경우 default 로 8080포트로 되어 있다. 주소:8080 으로 접속하여 고양이 그림이 있는 웹페이지가 뜨면 성공
+    
+    * github 저장소에서 지금까지 구현한 프로젝트를 pull 하고 build 하기
+        ```
+        $ git pull
+        $ ./mvnw clean package
+        ```
+    * tomcat 서버에 springboot 프로젝트 배포하기
+        * tomcat 이 설치된 디렉토리에서 `webapps/ROOT` 에 기존의 내용을 삭제 
+            ```
+            $ rm -rf ROOT/
+            ```
+        * 빌드한 프로젝트를 ROOT 디렉토리로 이동한 뒤 ROOT 디렉토리로 이름을 변경
+            ```
+            $ mv [해당프로젝트명] ~/tomcat/webapps
+            $ mv [해당프로젝트명]/ ROOT
+            ```
+    * tomcat 서버 구동 
+    * tomcat 서버 로그 확인하기 : `tomcat/logs` 로 이동하여 `catalina.out` 실행
+        ```
+        $ tail -500f catalina.out    
+        ```
+> 프로젝트 기능 구현을 한 뒤에 항상 실 서버나 테스트 서버에 배포 작업을 하자. 그렇지 않고 프로젝트를 완성한 뒤 배포하는 시점에 문제가 발생하게 되면 문제를 해결하는데 상당한 시간과 노력이 필요할 수 있다.     
 - - -
 
 
