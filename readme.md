@@ -800,6 +800,38 @@
 
 ### 4-5) 원격 서버에 소스코드 배포
 
+* war 파일로 배포
+    * `pom.xml` 설정
+        * war packaging 으로 변경
+            ```xml
+            <groupId>com.doubles.qna</groupId>
+            <artifactId>boot-qna</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <packaging>war</packaging>
+            ```
+        * 내장형 tomcat 을 사용하지 않고 별도의 tomcat 을 사용하기 위해 tomcat 의존성 추가
+            ```xml
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-tomcat</artifactId>
+                <scope>provided</scope>
+            </dependency>
+            ```
+    * `BootQnaWebInitializer` 클래스 작성 : 외장 tomcat 을 사용하려면 초기화를 위한 클래스를 따로 작성해줘야 한다.
+        ```java
+        public class BootQnaWebInitializer extends SpringBootServletInitializer {
+            @Override
+            protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+                return builder.sources(BootQnaApplication.class);
+            }
+        }
+        ```
+        
+        * `SpringBootServletInitializer` 클래스를 상속
+        * `configure()` 메서드를 오버라이딩
+            * 기존에 초기화 작업를 담당했던 `BootQnaApplication` 클래스를 등록 설정하여 초기화 작업을 수행할 수 있도록 해준다.
+        
+
 - - -
 
 
