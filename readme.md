@@ -944,6 +944,59 @@
     ```
     
 ### 5-2) 질문 상세보기 기능 구현
+* QuestionController : 질문 상세 보기 매핑
+    ```java
+    @GetMapping("/{id}")
+    public String show(@PathVariable Long id, Model model) {
+        model.addAttribute("question", questionRepository.findOne(id));
+        return "/qna/show";
+    }
+    ```
+* 질문 상세 보기 페이지 작성 : template/qna/show.html
+    ```xml
+    {{#question}}
+    <div class="panel panel-default">
+        <header class="qna-header">
+            <h2 class="qna-title">{{title}}</h2>
+        </header>
+        <div class="content-main">
+            <article class="article">
+                <div class="article-header">
+                    <div class="article-header-thumb">
+                        <img src="https://graph.facebook.com/v2.3/100000059371774/picture" class="article-author-thumb" alt="">
+                    </div>
+                    <div class="article-header-text">
+                        <a href="/users/92/kimmunsu" class="article-author-name">{{writer.userId}}</a>
+                        <a href="/questions/413" class="article-header-time" title="퍼머링크">
+                            {{formattedCreateDate}}
+                            <i class="icon-link"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="article-doc">
+                    {{contents}}
+                </div>
+                <div class="article-util">
+                    <ul class="article-util-list">
+                        <li>
+                            <a class="link-modify-article" href="/questions/{{id}}/form">수정</a>
+                        </li>
+                        <li>
+                            <form class="form-delete" action="/questions/{{id}}" method="POST">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button class="link-delete-article" type="submit">삭제</button>
+                            </form>
+                        </li>
+                        <li>
+                            <a class="link-modify-article" href="/">목록</a>
+                        </li>
+                    </ul>
+                </div>
+            </article>
+        </div>
+    </div>
+    {{/question}}
+    ```
 
 ### 5-3) 질문 수정 기능 구현
 
