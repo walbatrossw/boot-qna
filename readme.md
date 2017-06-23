@@ -998,8 +998,83 @@
     {{/question}}
     ```
 
-### 5-3) 질문 수정 기능 구현
-
+### 5-3) 질문 수정, 삭제 기능 구현
+* 표준 HTML 에서는 POST, GET 요청만 처리 할 수 있기 때문에 PUT, DELETE 요청을 처리하기 위해서는 아래와 같은 코드를 작성해주어야 한다.
+    ```xml
+    <input type="hidden" name="_method" value="put">
+    <input type="hidden" name="_method" value="delete">
+    ```
+* 질문 수정 기능 
+    * QuestionController : 질문 수정 화면, 수정처리 매핑
+        ```java
+        // 질문 수정 화면
+        @GetMapping("/{id}/form")
+        public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
+            model.addAttribute("question", questionRepository.findOne(id));
+            return "/qna/updateForm";
+        }
+  
+        // 질문 수정 처리
+        @PutMapping("/{id}")
+        public String update(@PathVariable Long id, String title, String contents, HttpSession session) {
+            Question question = questionRepository.findOne(id);
+            question.update(title, contents);
+            questionRepository.save(question);
+            return String.format("redirect:/questions/%d", id);
+        }
+        ```
+        
+    * show.html : 질문 수정 처리 페이지로 이동할 수 있도록 URL 세팅
+        ```java
+        <a class="link-modify-article" href="/questions/{{id}}/form">수정</a>
+        ```
+    
+    * updateForm.html : 질문 수정 처리
+        ```xml
+        <div class="container" id="main">
+            <div class="col-md-12 col-sm-12 col-lg-10 col-lg-offset-1">
+                <div class="panel panel-default content-main">
+                    {{#question}}
+                    <form name="question" method="post" action="/questions/{{id}}">
+                        <input type="hidden" name="_method" value="put">
+                        <div class="form-group">
+                            <label for="title">제목</label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{title}}" placeholder="제목"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="contents">내용</label>
+                            <textarea name="contents" id="contents" rows="5" class="form-control">{{contents}}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success clearfix pull-right">질문 수정</button>
+                        <div class="clearfix"/>
+                    </form>
+                    {{/question}}
+                </div>
+            </div>
+        </div>
+        ```
+    
+* 질문 삭제 기능
+    * QuestionController : 삭제처리 매핑
+        ```java
+        // 질문 삭제 처리
+        @DeleteMapping("/{id}")
+        public String delete(@PathVariable Long id) {
+            questionRepository.delete(id);
+            return "redirect:/";
+        }
+        ```
+    
+    * show.html : 질문 삭제 처리할 수 있도록 URL 세팅
+        ```xml
+        <li>
+            <form class="form-delete" action="/questions/{{id}}" method="POST">
+                <input type="hidden" name="_method" value="DELETE">
+                <button class="link-delete-article" type="submit">삭제</button>
+            </form>
+        </li>
+        ```
+    
 ### 5-4) 답변 추가 및 답변 목록 기능 구현
 
 ### 5-5) 원격 서버에 소스코드 배포

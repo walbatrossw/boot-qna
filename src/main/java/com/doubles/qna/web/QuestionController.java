@@ -6,10 +6,7 @@ import com.doubles.qna.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 
@@ -52,9 +49,28 @@ public class QuestionController {
         return "/qna/show";
     }
 
-    // 게시글 수정 화면
+    // 질문 수정 화면
+    @GetMapping("/{id}/form")
+    public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
+        model.addAttribute("question", questionRepository.findOne(id));
+        return "/qna/updateForm";
+    }
 
-    // 게시글 수정 처리
+    // 질문 수정 처리
+    @PutMapping("/{id}")
+    public String update(@PathVariable Long id, String title, String contents, HttpSession session) {
+        Question question = questionRepository.findOne(id);
+        question.update(title, contents);
+        questionRepository.save(question);
+        return String.format("redirect:/questions/%d", id);
+    }
+
+    // 질문 삭제 처리
+    @DeleteMapping("/{id}")
+    public String delete(@PathVariable Long id) {
+        questionRepository.delete(id);
+        return "redirect:/";
+    }
 
     // 답변 작성 처리
 
