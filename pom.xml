@@ -6,9 +6,7 @@
 	<groupId>com.doubles.qna</groupId>
 	<artifactId>boot-qna</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<!--war packaging 변경-->
 	<packaging>war</packaging>
-	<!--<packaging>jar</packaging>-->
 
 
 	<name>boot-qna</name>
@@ -28,6 +26,12 @@
 	</properties>
 
 	<dependencies>
+		<!--war packaging 을 위해 의존성 추가 : 내장형 tomcat 을 사용하지 않고 별도의 tomcat 사용-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mustache</artifactId>
@@ -45,12 +49,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!--war packaging 을 위해 의존성 추가 : 내장형 tomcat 을 사용하지 않고 별도의 tomcat 사용-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

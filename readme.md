@@ -875,8 +875,81 @@
         $ tail -500f catalina.out    
         ```
 > 프로젝트 기능 구현을 한 뒤에 항상 실 서버나 테스트 서버에 배포 작업을 하자. 그렇지 않고 프로젝트를 완성한 뒤 배포하는 시점에 문제가 발생하게 되면 문제를 해결하는데 상당한 시간과 노력이 필요할 수 있다.     
+
+
+### war 배포 설정 이후 로컬에서 오류발생
+* SpringBoot 프로젝트를 로컬에서 실행시 오류가 IntelliJ 에서 계속 발생, STS 에서는 이상없음.
+    * 원인 : `pom.xml` 에서 tomcat 설정 scope 에서 문제가 발생
+    * 해결 : `pom.xml` 에서 scope 설정 제거, default 설정(compiled)
+    * 참고 URL : http://krespo.net/166
+    
 - - -
 
+## 5. slipp 반복주기 5
+* 객체 간의 관계 설정(@OneToMany, @ManyToOne 등)
+
+### 5-1) 회원과 질문 간의 관계 매핑 및 리팩토링
+* 회원과 질문 간의 관계
+    * 회원 입장에서의 관계 : 한명의 회원과 다수의 질문이 존재할 수 있다. OneToMany
+        * User 가 Question 에 대한 목록을 가질수 있도록 관계를 맺을 수 있다.
+    * 질문 입장에서의 관계 : 다수의 질문과 한명의 회원이 존재할 수 있다. ManyToOne
+        * Question 이 User 객체를 가질 수 있도록 관계를 맺을 수 있다.
+
+* Question 클래스 리팩토링 : 회원과 질문간의 관계 설정 및 생성일 추가
+    * Question 객체에서 User 객체를 필드 변수로 선언하고 `@ManyToOne` 애너태이션을 통해 N:1의 관계로 설정하게 되면 User 객체의 기본키가 Question 객체의 foreign key 로 설정된다.
+    * `@JoinColumn` : 제약조건의 이름을 지정
+    ```java
+    @Entity
+    public class Question {
+        @Id
+        @GeneratedValue
+        private Long id;
+          
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_question_writer"))
+        private User writer;
+        // private String writer;
+    
+        private String title;
+    
+        private String contents;
+        
+        // 날짜와 시간을 나타내기 위해 java8 부터 추가된 타입
+        private LocalDateTime createDate;
+    
+        public Question() {
+        }
+    
+        public Question(User writer, String title, String contents) {
+            this.writer = writer;
+            this.title = title;
+            this.contents = contents;
+            // 현재시간 생성 할당 : 현재 시간이 생성되었지만 알수 없는 글자들로 표현되기 때문에 formatting 을 해줘야한다.
+            this.createDate =  LocalDateTime.now();
+        }
+        // 시간 포맷변경 메서드
+        public String getFormattedCreateDate() {
+            if (createDate == null) {
+                return "";
+            }
+            return createDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss"));
+        }
+    
+    }
+    ```
+* index.html 에서 질문이 생성된 날짜와 시간 출력
+    * mustache 템플릿은 기본적으로 get() 메서드를 지원하기 때문에 Question 클래스에서 작성한 `getFormattedCreateDate()` 메서드에서 get 을 제거하고 대문자 F를 소문자 f로 변경하여 {{}}에 넣어주면 날짜가 화면에 출력된다.
+    ```xml
+    <span class="time">{{formattedCreateDate}}</span>
+    ```
+    
+### 5-2) 질문 상세보기 기능 구현
+
+### 5-3) 질문 수정 기능 구현
+
+### 5-4) 답변 추가 및 답변 목록 기능 구현
+
+### 5-5) 원격 서버에 소스코드 배포
 
 
 

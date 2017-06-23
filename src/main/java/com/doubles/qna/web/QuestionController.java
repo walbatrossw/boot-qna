@@ -38,7 +38,7 @@ public class QuestionController {
         // 현재 로그인되어 있는 회원의 정보를 sessionUser 에 복사
         User sessionUser = HttpSessionUtils.getUserFromSession(session);
 
-        Question newQuestion = new Question(sessionUser.getUserId(), title, contents);
+        Question newQuestion = new Question(sessionUser, title, contents);
         questionRepository.save(newQuestion);
         return "redirect:/";
     }
