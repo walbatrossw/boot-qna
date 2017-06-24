@@ -1190,10 +1190,173 @@
         ```
 
 ### 5-5) 답변 추가 및 답변 목록 기능 구현
+* Answer 클래스 작성
+    ```java
+    @Entity
+    public class Answer {
+    
+        @Id
+        @GeneratedValue
+        private Long id;
+    
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_writer"))
+        private User writer;
+    
+        @Lob // 255자가 넘는 String 타입일 경우 @Lob 애노테이션 추가
+        private String contents;
+    
+        private LocalDateTime createDate;
+    
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_question"))
+        private Question question;
+    
+        // 기본 생성자
+        public Answer() {
+    
+        }
+    
+        // 생성자
+        public Answer(User writer, Question question, String contents) {
+            this.writer = writer;
+            this.contents = contents;
+            this.question = question;
+            this.createDate =  LocalDateTime.now();
+        }
+    
+        // 시간 포맷변경 메서드
+        public String getFormattedCreateDate() {
+            if (createDate == null) {
+                return "";
+            }
+            return createDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss"));
+        }
+    
+        // equals() 메서드 오버라이딩
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+    
+            Answer answer = (Answer) o;
+    
+            return id != null ? id.equals(answer.id) : answer.id == null;
+        }
+    
+        // hashCode() 메서드 오버라이딩
+        @Override
+        public int hashCode() {
+            return id != null ? id.hashCode() : 0;
+        }
+    
+        // toString() 메서드
+        @Override
+        public String toString() {
+            return "Answer{" +
+                    "id=" + id +
+                    ", writer=" + writer +
+                    ", contents='" + contents + '\'' +
+                    ", createDate=" + createDate +
+                    '}';
+        }
+    }
+    ```
+* AnswerRepository 클래스 작성
+    ```java
+    @Repository
+    public interface AnswerRepository extends JpaRepository<Answer, Long>{
+    
+    }
+    ```
+* AnswerController 클래스 작성
+    ```java
+    @Controller
+    @RequestMapping("/questions/{questionId}/answers")
+    public class AnswerController {
+    
+        @Autowired
+        private AnswerRepository answerRepository;
+    
+        @Autowired
+        private QuestionRepository questionRepository;
+    
+        // 답변 하기
+        @PostMapping
+        public  String create(@PathVariable Long questionId, String contents, HttpSession session) {
+            // 로그인되어 있지 않으면 로그인 페이지로
+            if ( !HttpSessionUtils.isLoginUser(session) ) {
+                return "/users/loginForm";
+            }
+            // 로그인된 회원의 정보 가져오기
+            User loginUser = HttpSessionUtils.getUserFromSession(session);
+            Question question = questionRepository.findOne(questionId);
+            
+            Answer answer = new Answer(loginUser, question, contents);
+            answerRepository.save(answer);
+            return  String.format("redirect:/questions/%d", questionId);
+        }
+    
+    }
+    ```
 
-### 5-6) 원격 서버에 소스코드 배포
+* Question 클래스 : 질문과 답변 간의 관계 매핑 - 1:N, 하나의 질문에 다수의 답변이 존재가 가능하다.
+    * `@OneToMany` : 1:N 관계
+    * `mapppedBy` : 관계를 설정할 해당 필드명을 입력
+    * `@OrderBy` : 정렬, 속성(ASC, DESC) 
+    ```java
+    @OneToMany(mappedBy = "question")
+    @OrderBy("id ASC")  // 오른차순 정렬
+    private List<Answer> answers;
+    ```
 
-### 5-7) QuestionController 중복 제거 리팩토링
+* show.html : 답변 목록 및 입력 코드 작성 
+    ```xml
+    {{#answers}}
+    <article class="article" id="answer-1405">
+        <div class="article-header">
+            <div class="article-header-thumb">
+                <img src="https://graph.facebook.com/v2.3/1324855987/picture" class="article-author-thumb" alt="">
+            </div>
+            <div class="article-header-text">
+                <a href="/users/1/자바지기" class="article-author-name">{{writer.userId}}</a>
+                <a href="#answer-1434" class="article-header-time" title="퍼머링크">
+                    {{formattedCreateDate}}
+                </a>
+            </div>
+        </div>
+        <div class="article-doc comment-doc">
+            {{contents}}
+        </div>
+        <div class="article-util">
+            <ul class="article-util-list">
+                <li>
+                    <a class="link-modify-article" href="" >수정</a>
+                </li>
+                <li>
+                    <form class="delete-answer-form" action="" method="POST">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="delete-answer-button">삭제</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </article>
+    {{/answers}}
+    <form class="submit-write" method="post" action="/questions/{{id}}/answers">
+        <div class="form-group" style="padding:14px;">
+            <textarea class="form-control" placeholder="Update your status" name="contents"></textarea>
+        </div>
+        <input type="submit" class="btn btn-success pull-right" value="답변하기">
+        <div class="clearfix"/>
+    </form>
+    ```
+
+### 5-6) QuestionController 중복 제거 리팩토링
+
+### 5-7) 원격 서버에 소스코드 배포
+
+
 
 
 

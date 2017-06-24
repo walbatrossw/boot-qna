@@ -3,6 +3,7 @@ package com.doubles.qna.domain;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Entity
 public class Question {
@@ -17,10 +18,15 @@ public class Question {
 
     private String title;
 
+    @Lob
     private String contents;
 
     // 날짜와 시간을 나타내기 위해 java8 부터 추가된 타입
     private LocalDateTime createDate;
+
+    @OneToMany(mappedBy = "question")
+    @OrderBy("id ASC")  // 오른차순 정렬
+    private List<Answer> answers;
 
     public Question() {
     }
@@ -52,4 +58,14 @@ public class Question {
         this.contents = contents;
     }
 
+    @Override
+    public String toString() {
+        return "Question{" +
+                "id=" + id +
+                ", writer=" + writer +
+                ", title='" + title + '\'' +
+                ", contents='" + contents + '\'' +
+                ", createDate=" + createDate +
+                '}';
+    }
 }

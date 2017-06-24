@@ -103,8 +103,4 @@ public class QuestionController {
         questionRepository.delete(id);
         return "redirect:/";
     }
-
-    // 답변 작성 처리
-
-    // 답변 목록
 }
