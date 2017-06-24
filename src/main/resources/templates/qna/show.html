@@ -30,6 +30,9 @@
                     <div class="article-doc">
                         {{contents}}
                     </div>
+                    {{#errorMsg}}
+                    <div class="alert alert-danger" role="alert">{{this}}</div>
+                    {{/errorMsg}}
                     <div class="article-util">
                         <ul class="article-util-list">
                             <li>
