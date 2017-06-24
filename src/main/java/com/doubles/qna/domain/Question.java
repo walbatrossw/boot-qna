@@ -41,6 +41,12 @@ public class Question {
         return createDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss"));
     }
 
+    // 로그인유저와 글작성자 비교
+    public boolean isSameWriter(User loginUser) {
+        return this.writer.equals(loginUser);
+    }
+
+    // update 메서드
     public void update(String title, String contents) {
         this.title = title;
         this.contents = contents;

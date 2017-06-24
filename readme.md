@@ -1074,12 +1074,126 @@
             </form>
         </li>
         ```
-    
-### 5-4) 답변 추가 및 답변 목록 기능 구현
 
-### 5-5) 원격 서버에 소스코드 배포
+### 5-4) 수정/삭제 기능에 대한 보안 처리 및 LocalDateTime 설정    
+* 수정/삭제 기능 보안처리
+    * QuestionController 클래스 보안처리
+        * `updateForm()` 메서드 : 수정화면 매핑
+            ```java
+            @GetMapping("/{id}/form")
+            public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
+                // 로그인 여부 체크
+                if ( !HttpSessionUtils.isLoginUser(session) ) {
+                    return "redirect:/users/loginForm";
+                }
+                // 로그인한 유저와 질문작성자 비교
+                User loginUser = HttpSessionUtils.getUserFromSession(session);
+                Question question = questionRepository.findOne(id);
+                if ( !question.isSameWriter(loginUser) ) {
+                    return "redirect:/users/loginForm";
+                }
+        
+                model.addAttribute("question", question);
+                return "/qna/updateForm";
+            }
+            ```
+        * `udpdate()` 메서드 : 수정처리 매핑
+            ```java
+            @PutMapping("/{id}")
+            public String update(@PathVariable Long id, String title, String contents, HttpSession session) {
+                // 로그인 여부 체크
+                if ( !HttpSessionUtils.isLoginUser(session) ) {
+                    return "redirect:/users/loginForm";
+                }
+                // 로그인한 유저와 질문작성자 비교
+                User loginUser = HttpSessionUtils.getUserFromSession(session);
+                Question question = questionRepository.findOne(id);
+                if ( !question.isSameWriter(loginUser) ) {
+                    return "redirect:/users/loginForm";
+                }
+        
+                question.update(title, contents);
+                questionRepository.save(question);
+                return String.format("redirect:/questions/%d", id);
+            }
+            ```
+            * `String.format()` 메서드 
+                * 수정처리가 완료되고 나서 수정된 질문페이지로 이동하기 위해서는 id 값이 필요하다.
+                * 리턴값이 String 인데 특정 변수의 값을 String 에 포함시키기 위해서는 아래와 같이 작성하면 된다.
+                    ```java
+                    String.format("redirect:/questions/%d", id);
+                    ```
+            
+        * `delete()` 메서드 : 삭제처리 매핑
+            ```java
+            @DeleteMapping("/{id}")
+            public String delete(@PathVariable Long id, HttpSession session) {
+                // 로그인 여부 체크
+                if ( !HttpSessionUtils.isLoginUser(session) ) {
+                    return "redirect:/users/loginForm";
+                }
+                // 로그인한 유저와 질문작성자 비교
+                User loginUser = HttpSessionUtils.getUserFromSession(session);
+                Question question = questionRepository.findOne(id);
+                if ( !question.isSameWriter(loginUser) ) {
+                    return "redirect:/users/loginForm";
+                }
+        
+                questionRepository.delete(id);
+                return "redirect:/";
+            }
+            ```
+    * Question 클래스
+        * 질문 작성자와 로그인유저가 같은지 비교하는 메서드 
+            ```java
+            public boolean isSameWriter(User loginUser) {
+                    return this.writer.equals(loginUser);
+                }
+            ```
+        * `equals()` 메서드 오버라이딩
+            * 위의 코드를 작성하고 테스트 해보면 계속 false 가 리턴 되어 로그인페이지로 리다이렉트가 된다. 
+            * 그 이유는 `equals()` 메서드는 참조변수에 저장된 주소 값이 같은지만를 판단하는 때문이다.
+            * `equals()` 메서드로 writer 인스턴스와 loginUser 인스턴스가 가지고 있는 id 값을 비교하는 방법은 `equals()` 메서드를 오버라이딩하여 객체에 저장된 내용을 비교하도록 변경해줘야 한다. 
+                ```java
+                // equals() 메서드 오버라이딩
+                @Override
+                public boolean equals(Object o) {
+                    if (this == o) return true;
+                    if (o == null || getClass() != o.getClass()) return false;
+            
+                    User user = (User) o;
+            
+                    return id != null ? id.equals(user.id) : user.id == null;
+                }
+                // hashCode() 메서드 오버라이딩
+                @Override
+                public int hashCode() {
+                    return id != null ? id.hashCode() : 0;
+                }
+                ```
+* LocalDateTime 설정
+    * DateTimeConverter 클래스 작성 : LocalDateTime 타입을 Timestamp 타입으로 변환 시켜주는 역할 수행
+        ```java
+        @Converter(autoApply = true)
+        public class DateTimeConverter implements AttributeConverter<LocalDateTime, Timestamp> {
+        
+            @Override
+            public Timestamp convertToDatabaseColumn(LocalDateTime localDateTime) {
+                return localDateTime != null ? Timestamp.valueOf(localDateTime) : null;
+            }
+        
+            @Override
+            public LocalDateTime convertToEntityAttribute(Timestamp timestamp) {
+                return timestamp != null ? timestamp.toLocalDateTime() : null;
+            }
+        }
+        ```
 
+### 5-5) 답변 추가 및 답변 목록 기능 구현
 
+### 5-6) 원격 서버에 소스코드 배포
+
+### 5-7) QuestionController 중복 제거 리팩토링
 
 
 
