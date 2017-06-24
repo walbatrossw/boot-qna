@@ -2,6 +2,7 @@ package com.doubles.qna.web;
 
 import com.doubles.qna.domain.Question;
 import com.doubles.qna.domain.QuestionRepository;
+import com.doubles.qna.domain.Result;
 import com.doubles.qna.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -49,13 +50,26 @@ public class QuestionController {
         return "/qna/show";
     }
 
-    // 권한체크 메서드
+    // 권한체크 메서드 1 : Result 클래스를 작성하여 구현
+    private Result valid(HttpSession session, Question question) {
+        // 로그인 여부 체크
+        if ( !HttpSessionUtils.isLoginUser(session) ) {
+            return Result.fail("로그인이 필요합니다.");
+        }
+        // 본인여부 체크
+        User loginUser = HttpSessionUtils.getUserFromSession(session);
+        if ( !question.isSameWriter(loginUser) ) {
+            return Result.fail("자신이 쓴 글만 수정, 삭제가 가능합니다.");
+        }
+        return Result.ok();
+    }
+
+    // 권한체크 메서드 2 : exception 으로 구현
     private boolean hasPermission(HttpSession session, Question question) {
         // 로그인 여부 체크
         if ( !HttpSessionUtils.isLoginUser(session) ) {
             throw new IllegalStateException("로그인이 필요합니다.");
         }
-
         // 본인여부 체크
         User loginUser = HttpSessionUtils.getUserFromSession(session);
         if ( !question.isSameWriter(loginUser) ) {
@@ -67,60 +81,52 @@ public class QuestionController {
     // 질문 수정 화면
     @GetMapping("/{id}/form")
     public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
-        try {
-            // 현재 질문 조회
-            Question question = questionRepository.findOne(id);
-            // 권한 체크
-            hasPermission(session, question);
-            // 질문 수정화면으로 이동
-            model.addAttribute("question", question);
-            return "/qna/updateForm";
-        } catch (IllegalStateException e) {
-            // 에러 메시지 전달
-            model.addAttribute("errorMsg", e.getMessage());
+        // 현재 질문 조회
+        Question question = questionRepository.findOne(id);
+        Result result = valid(session, question);
+        if ( !result.isValid() ) {
+            // 에러 메시지 저장
+            model.addAttribute("errorMsg", result.getErrorMsg());
             // 로그인 페이지로 이동
             return "/user/login";
         }
+        // 질문 수정화면으로 이동
+        model.addAttribute("question", question);
+        return "/qna/updateForm";
     }
 
     // 질문 수정 처리
     @PutMapping("/{id}")
     public String update(@PathVariable Long id, String title, String contents, Model model, HttpSession session) {
-        try {
-            // 현재 질문 조회
-            Question question = questionRepository.findOne(id);
-            // 권한 체크
-            hasPermission(session, question);
-            // 업데이트 처리
-            question.update(title, contents);
-            questionRepository.save(question);
-            return String.format("redirect:/questions/%d", id);
-        } catch (IllegalStateException e) {
-            // 에러 메시지 전달
-            model.addAttribute("errorMsg", e.getMessage());
+        // 현재 질문 조회
+        Question question = questionRepository.findOne(id);
+        Result result = valid(session, question);
+        if ( !result.isValid() ) {
+            // 에러 메시지 저장
+            model.addAttribute("errorMsg", result.getErrorMsg());
             // 로그인 페이지로 이동
             return "/user/login";
         }
+        // 업데이트 처리
+        question.update(title, contents);
+        questionRepository.save(question);
+        return String.format("redirect:/questions/%d", id);
     }
 
     // 질문 삭제 처리
     @DeleteMapping("/{id}")
     public String delete(@PathVariable Long id, HttpSession session, Model model) {
-        try {
-            // 현재 질문 조회
-            Question question = questionRepository.findOne(id);
-            // 권한 체크
-            hasPermission(session, question);
-            // 삭제 처리
-            questionRepository.delete(id);
-            return "redirect:/";
-        } catch (IllegalStateException e) {
-            // 에러 메시지 전달
-            model.addAttribute("errorMsg", e.getMessage());
+        // 현재 질문 조회
+        Question question = questionRepository.findOne(id);
+        Result result = valid(session, question);
+        if ( !result.isValid() ) {
+            // 에러 메시지 저장
+            model.addAttribute("errorMsg", result.getErrorMsg());
             // 로그인 페이지로 이동
             return "/user/login";
         }
-
-
+        // 삭제 처리
+        questionRepository.delete(id);
+        return "redirect:/";
     }
 }

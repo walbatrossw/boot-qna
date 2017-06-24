@@ -1353,7 +1353,196 @@
     ```
 
 ### 5-6) QuestionController 중복 제거 리팩토링
+* 중복코드 제거 방법 1 : Exception 을 이용
+    * QuestionController 
+        * 권한 체크 메서드 작성 : 수정화면, 수정처리, 삭제시 중복되는 코드를 메서드화하고, 예외처리
+            ```java
+            // 권한체크 메서드
+            private boolean hasPermission(HttpSession session, Question question) {
+                // 로그인 여부 체크
+                if ( !HttpSessionUtils.isLoginUser(session) ) {
+                    throw new IllegalStateException("로그인이 필요합니다.");
+                }
+                // 본인여부 체크
+                User loginUser = HttpSessionUtils.getUserFromSession(session);
+                if ( !question.isSameWriter(loginUser) ) {
+                    throw new IllegalStateException("자신이 쓴 글만 수정, 삭제가 가능합니다.");
+                }
+                return true;
+            }
+            ```
+        * 수정 화면
+            ```java
+            @GetMapping("/{id}/form")
+            public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
+                try {
+                    // 현재 질문 조회
+                    Question question = questionRepository.findOne(id);
+                    // 권한 체크
+                    hasPermission(session, question);
+                    // 질문 수정화면으로 이동
+                    model.addAttribute("question", question);
+                    return "/qna/updateForm";
+                } catch (IllegalStateException e) {
+                    // 에러 메시지 전달
+                    model.addAttribute("errorMsg", e.getMessage());
+                    // 로그인 페이지로 이동
+                    return "/user/login";
+                }
+            }
+            ```
+        * 수정 처리
+            ```java
+            @PutMapping("/{id}")
+            public String update(@PathVariable Long id, String title, String contents, Model model, HttpSession session) {
+                try {
+                    // 현재 질문 조회
+                    Question question = questionRepository.findOne(id);
+                    // 권한 체크
+                    hasPermission(session, question);
+                    // 업데이트 처리
+                    question.update(title, contents);
+                    questionRepository.save(question);
+                    return String.format("redirect:/questions/%d", id);
+                } catch (IllegalStateException e) {
+                    // 에러 메시지 전달
+                    model.addAttribute("errorMsg", e.getMessage());
+                    // 로그인 페이지로 이동
+                    return "/user/login";
+                }
+            }
+            ```
+        * 삭제 처리
+            ```java
+            @DeleteMapping("/{id}")
+            public String delete(@PathVariable Long id, HttpSession session, Model model) {
+                try {
+                    // 현재 질문 조회
+                    Question question = questionRepository.findOne(id);
+                    // 권한 체크
+                    hasPermission(session, question);
+                    // 삭제 처리
+                    questionRepository.delete(id);
+                    return "redirect:/";
+                } catch (IllegalStateException e) {
+                    // 에러 메시지 전달
+                    model.addAttribute("errorMsg", e.getMessage());
+                    // 로그인 페이지로 이동
+                    return "/user/login";
+                }
+            }
+            ```
+    * login.html : 로그인 `form` 태그 상단에 에러메시지 출력할 `div`태그 작성
+        ```xml
+        {{#errorMsg}}
+        <div class="alert alert-danger" role="alert">{{this}}</div>
+        {{/errorMsg}}
+        ```
+        
+* 중복코드 제거방법 2 Result 클래스를 작성
+    * Result 클래스
+        ```java
+        public class Result {
+            // 권한 유효성 판단
+            private boolean valid;
+            // 에러메시지
+            private String errorMsg;
+        
+            private Result(boolean valid, String errorMsg) {
+                this.valid = valid;
+                this.errorMsg = errorMsg;
+            }
+        
+            public boolean isValid() {
+                return valid;
+            }
+        
+            public String getErrorMsg() {
+                return errorMsg;
+            }
+        
+            public static Result ok() {
+                return new Result(true, null);
+            }
+        
+            public static Result fail(String errorMsg) {
+                return new Result(false, errorMsg);
+            }
+        }
+        ```
 
+    * QuestionController 클래스
+        * 권한 체크 메서드
+            ```java
+            private Result valid(HttpSession session, Question question) {
+                // 로그인 여부 체크
+                if ( !HttpSessionUtils.isLoginUser(session) ) {
+                    return Result.fail("로그인이 필요합니다.");
+                }
+                // 본인여부 체크
+                User loginUser = HttpSessionUtils.getUserFromSession(session);
+                if ( !question.isSameWriter(loginUser) ) {
+                    return Result.fail("자신이 쓴 글만 수정, 삭제가 가능합니다.");
+                }
+                return Result.ok();
+            }
+            ```
+        
+        * 질문 수정 화면
+            ```java
+            @GetMapping("/{id}/form")
+            public String updateForm(@PathVariable Long id, Model model, HttpSession session) {
+                // 현재 질문 조회
+                Question question = questionRepository.findOne(id);
+                Result result = valid(session, question);
+                if ( !result.isValid() ) {
+                    // 에러 메시지 저장
+                    model.addAttribute("errorMsg", result.getErrorMsg());
+                    // 로그인 페이지로 이동
+                    return "/user/login";
+                }
+                // 질문 수정화면으로 이동
+                model.addAttribute("question", question);
+                return "/qna/updateForm";
+            }
+            ```
+        * 질문 수정 처리
+            ```java
+            @PutMapping("/{id}")
+            public String update(@PathVariable Long id, String title, String contents, Model model, HttpSession session) {
+                // 현재 질문 조회
+                Question question = questionRepository.findOne(id);
+                Result result = valid(session, question);
+                if ( !result.isValid() ) {
+                    // 에러 메시지 저장
+                    model.addAttribute("errorMsg", result.getErrorMsg());
+                    // 로그인 페이지로 이동
+                    return "/user/login";
+                }
+                // 업데이트 처리
+                question.update(title, contents);
+                questionRepository.save(question);
+                return String.format("redirect:/questions/%d", id);
+            }
+            ```   
+        * 질문 삭제 처리
+            ```java
+            @DeleteMapping("/{id}")
+            public String delete(@PathVariable Long id, HttpSession session, Model model) {
+                // 현재 질문 조회
+                Question question = questionRepository.findOne(id);
+                Result result = valid(session, question);
+                if ( !result.isValid() ) {
+                    // 에러 메시지 저장
+                    model.addAttribute("errorMsg", result.getErrorMsg());
+                    // 로그인 페이지로 이동
+                    return "/user/login";
+                }
+                // 삭제 처리
+                questionRepository.delete(id);
+                return "redirect:/";
+            }
+            ```
 ### 5-7) 원격 서버에 소스코드 배포
 
 
