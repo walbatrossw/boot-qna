@@ -1545,7 +1545,177 @@
             ```
 ### 5-7) 원격 서버에 소스코드 배포
 
+## 6. slipp 반복주기 6
+* JSON API 및 AJAX 를 활용해 답변 추가/삭제 구현
 
+### 6-1 AJAX 를 활용해 답변 추가 기능 구현
+* 답변관련 AnswerController => ApiAnswerController 변경
+    * `@Controller` => `@RestController` 애너테이션 변경
+    * `@RequstMapping` URL 변경 : `("/questions/{questionId}/answers")` => `("/api/questions/{questionId}/answers")`
+    * create() 메서드 리턴타입 변경 : `String` => `Answer`
+    ```java
+    @RestController
+    @RequestMapping("/api/questions/{questionId}/answers")
+    public class ApiAnswerController {
+    
+        @Autowired
+        private AnswerRepository answerRepository;
+    
+        @Autowired
+        private QuestionRepository questionRepository;
+    
+        // 답변 하기
+        @PostMapping
+        public Answer create(@PathVariable Long questionId, String contents, HttpSession session) {
+            // 로그인되어 있지 않으면 로그인 페이지로
+            if ( !HttpSessionUtils.isLoginUser(session) ) {
+                return null;
+            }
+            // 로그인된 회원의 정보 가져오기
+            User loginUser = HttpSessionUtils.getUserFromSession(session);
+            Question question = questionRepository.findOne(questionId);
+            Answer answer = new Answer(loginUser, question, contents);
+            return answerRepository.save(answer);
+        }
+    }
+    ```
+* Json 사용을 위해 각 클래스의 필드마다`@JsonProperty` 애노테이션 추가
+    * Answer 클래스 변경
+        ```java
+        @Id
+        @GeneratedValue
+        @JsonProperty // <- 애너테이션 추가
+        private Long id;
+    
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_writer"))
+        @JsonProperty // <- 애너테이션 추가
+        private User writer;
+    
+        @Lob 
+        @JsonProperty // <- 애너테이션 추가
+        private String contents;
+    
+        private LocalDateTime createDate;
+    
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_question"))
+        @JsonProperty // <- 애너테이션 추가
+        private Question question;
+        ```
+        
+    * Question 클래스 변경
+        ```java
+        @Id
+        @GeneratedValue
+        @JsonProperty // <- 애너테이션 추가
+        private Long id;
+    
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_question_writer"))
+        @JsonProperty // <- 애너테이션 추가
+        private User writer;
+        
+    
+        @JsonProperty // <- 애너테이션 추가
+        private String title;
+    
+        @Lob
+        @JsonProperty // <- 애너테이션 추가
+        private String contents;
+    
+        
+        private LocalDateTime createDate;
+    
+        @OneToMany(mappedBy = "question")
+        @OrderBy("id DESC")  // 내림차순 정렬
+        private List<Answer> answers;
+        ```
+        
+    * User 클래스 변경
+        ```java
+        @Id
+        @GeneratedValue
+        @JsonProperty // <- 애너테이션 추가
+        private Long id;    
+    
+        @Column(nullable = false, length = 20, unique = true)
+        @JsonProperty // <- 애너테이션 추가
+        private String userId;
+    
+        @JsonIgnore // <- 애너테이션 추가
+        private String password;
+    
+        @JsonProperty // <- 애너테이션 추가
+        private String name;
+    
+        @JsonProperty // <- 애너테이션 추가
+        private String email;
+        ```
+        
+* script.js 변경
+    ```js
+    // 답변하기 버튼 클릭 이벤트 발생시 addAnswer 함수 호출
+    $(".answer-write input[type=submit]").click(addAnswer);
+    
+    // 답변하기 추가 AJAX 요청 처리를 위한 함수
+    function addAnswer(e) {
+        console.log("clicked");
+        e.preventDefault(); // submit 기본 효과 방지
+        var queryString = $(".answer-write").serialize(); // JSON 타입으로 객체 직렬화
+        console.log("queryString : "+queryString);
+        var url = $(".answer-write").attr("action"); // 요청 URL 저장
+        console.log("url : "+url);
+        // AJAX POST 요청 처리
+        $.ajax({
+            type : 'post',
+            url : url,
+            data : queryString,
+            dataType : 'json',
+            error : onError,
+            success : onSuccess
+        });
+    }
+    
+    // AJAX 요청 처리 실패시
+    function onError(status) {
+        console.log("error" + status);
+    }
+    
+    // AJAX 요청 처리 성공시
+    function onSuccess (data, status) {
+        console.log(data);
+        var answerTemplate = $("#answerTemplate").html();
+        var template = answerTemplate.format(data.writer.userId, data.formattedCreateDate, data.contents, data.id);
+        $(".qna-comment-slipp-articles").prepend(template); //  변수 template 에 담긴 답변을 append
+        $(".answer-write textarea").val("");    // textarea 에 남아있는 내용 지우기
+    }
+    
+    // 답변 템플릿 : replace() 함수와 정규표현식을 통해 변환
+    String.prototype.format = function() {
+        var args = arguments;
+        return this.replace(/{(\d+)}/g, function(match, number) {
+            return typeof args[number] != 'undefined'
+                ? args[number]
+                : match
+                ;
+        });
+    };
+    ```
+* show.html 변경 : `form` 태그의 action 속성 url 변경
+    ```xml
+    <form class="answer-write" method="post" action="/api/questions/{{id}}/answers">
+        <div class="form-group" style="padding:14px;">
+            <textarea class="form-control" placeholder="Update your status" name="contents"></textarea>
+        </div>
+        <input type="submit" class="btn btn-success pull-right" value="답변하기">
+        <div class="clearfix"/>
+    </form>
+    ```
+### 6-2 질문 목록에 답변 수 보여주기 기능 추가
+### 6-3 중복 제거 및 리팩토링
+### 6-4 JSON API 추가 및 테스트
+### 6-5 쉘 스크립트를 활용해 배포 자동화
 
 
 

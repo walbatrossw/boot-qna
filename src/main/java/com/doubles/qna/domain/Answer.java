@@ -1,5 +1,7 @@
 package com.doubles.qna.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -9,19 +11,23 @@ public class Answer {
 
     @Id
     @GeneratedValue
+    @JsonProperty
     private Long id;
 
     @ManyToOne
     @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_writer"))
+    @JsonProperty
     private User writer;
 
     @Lob // 255자가 넘는 String 타입일 경우 애노테이션 추가
+    @JsonProperty
     private String contents;
 
     private LocalDateTime createDate;
 
     @ManyToOne
     @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_question"))
+    @JsonProperty
     private Question question;
 
     // 기본 생성자

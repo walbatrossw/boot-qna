@@ -1,18 +1,28 @@
 package com.doubles.qna.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 
 @Entity
 public class User {
     @Id
     @GeneratedValue
+    @JsonProperty
     private Long id;    // 기본키
 
     @Column(nullable = false, length = 20, unique = true)
+    @JsonProperty
     private String userId;      // 회원 아이디
 
+    @JsonIgnore
     private String password;    // 비밀번호
+
+    @JsonProperty
     private String name;        // 회원 이름
+
+    @JsonProperty
     private String email;       // 회원 이메일
 
     // Getter Setter 메서드
@@ -34,9 +44,9 @@ public class User {
         this.id = id;
     }
 
-    public String getUserId() {
-        return userId;
-    }
+//    public String getUserId() {
+//        return userId;
+//    }
 
     public void setUserId(String userId) {
         this.userId = userId;
@@ -59,17 +69,17 @@ public class User {
         this.password = password;
     }
 
-    public String getName() {
-        return name;
-    }
+//    public String getName() {
+//        return name;
+//    }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public String getEmail() {
-        return email;
-    }
+//    public String getEmail() {
+//        return email;
+//    }
 
     public void setEmail(String email) {
         this.email = email;

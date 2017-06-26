@@ -1,5 +1,7 @@
 package com.doubles.qna.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -9,23 +11,27 @@ import java.util.List;
 public class Question {
     @Id
     @GeneratedValue
+    @JsonProperty
     private Long id;
 
     @ManyToOne
     @JoinColumn(foreignKey = @ForeignKey(name = "fk_question_writer"))
+    @JsonProperty
     private User writer;
     // private String writer;
 
+    @JsonProperty
     private String title;
 
     @Lob
+    @JsonProperty
     private String contents;
 
     // 날짜와 시간을 나타내기 위해 java8 부터 추가된 타입
     private LocalDateTime createDate;
 
     @OneToMany(mappedBy = "question")
-    @OrderBy("id ASC")  // 오른차순 정렬
+    @OrderBy("id DESC")  // 내림차순 정렬
     private List<Answer> answers;
 
     public Question() {
