@@ -29,9 +29,34 @@ function onError(status) {
 function onSuccess (data, status) {
     console.log(data);
     var answerTemplate = $("#answerTemplate").html();
-    var template = answerTemplate.format(data.writer.userId, data.formattedCreateDate, data.contents, data.id);
+    var template = answerTemplate.format(data.writer.userId, data.formattedCreateDate, data.contents, data.question.id, data.id);
     $(".qna-comment-slipp-articles").prepend(template); //  변수 template 에 담긴 답변을 append
     $(".answer-write textarea").val("");    // textarea 에 남아있는 내용 지우기
+}
+
+// 답변삭제 클릭 이벤트 발생시 deleteAnswer 함수 호출
+$(".qna-comment").on('click', '.link-delete-article', deleteAnswer);
+// 답변삭제 AJAX 요청 처리를 위한 함수
+function deleteAnswer(e) {
+    e.preventDefault(); // a태그 기본효과 방지
+    var deleteBtn = $(this);
+    var url = deleteBtn.attr("href");
+    $.ajax({
+        type : 'delete',
+        url : url,
+        dataType : 'json',
+        error : function (xhr, status) {
+            console.log("error");
+        },
+        success : function (data, status) {
+            console.log(data);
+            if (data.valid) {
+                deleteBtn.closest("article").remove();
+            } else {
+                alert(data.errorMsg);
+            }
+        }
+    });
 }
 
 // 답변 템플릿 : replace() 함수와 정규표현식을 통해 변환

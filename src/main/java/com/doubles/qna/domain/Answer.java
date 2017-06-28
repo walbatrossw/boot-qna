@@ -51,6 +51,10 @@ public class Answer {
         return createDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss"));
     }
 
+    public boolean isSameWriter(User loginUser) {
+        return loginUser.equals(this.writer);
+    }
+
     // equals() 메서드 오버라이딩
     @Override
     public boolean equals(Object o) {
@@ -78,4 +82,6 @@ public class Answer {
                 ", createDate=" + createDate +
                 '}';
     }
+
+
 }

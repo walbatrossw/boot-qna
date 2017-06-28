@@ -1712,10 +1712,93 @@
         <div class="clearfix"/>
     </form>
     ```
-### 6-2 질문 목록에 답변 수 보여주기 기능 추가
-### 6-3 중복 제거 및 리팩토링
-### 6-4 JSON API 추가 및 테스트
-### 6-5 쉘 스크립트를 활용해 배포 자동화
+### 6-2 AJAX 를 활용해 답변 삭제 기능 구현
+* ApiAnswerController : 답변 삭제 매핑 메서드 작성
+    ```java
+    @DeleteMapping("/{id}")
+    public Result delete(@PathVariable Long questionId, @PathVariable Long id, HttpSession session) {
+        // 로그인 상태가 아닐경우 로그인 유도
+        if ( !HttpSessionUtils.isLoginUser(session) ) {
+            return Result.fail("로그인해야 합니다.");
+        }
+        // 로그인 유저와 답변작성자가 일치하는지 비교
+        Answer answer = answerRepository.findOne(id);
+        User loginUser = HttpSessionUtils.getUserFromSession(session);
+        // 불일치할 경우 경고문 알림
+        if ( !answer.isSameWriter(loginUser) ) {
+            return Result.fail("자신의 글만 삭제할 수 있습니다.");
+        }
+        // 일치할 경우 답변 삭제
+        answerRepository.delete(id);
+        return Result.ok();
+    }
+    ```
+* Answer 클래스 `isSameWriter()` 메서드 작성 : 로그인 유저와 답변 작성자 일치하는지 비교
+    ```java
+    public boolean isSameWriter(User loginUser) {
+        return loginUser.equals(this.writer);
+    }
+    ``` 
+* show.html
+    * 답변 영역의 삭제 버튼 url 설정
+        ```xml
+        <div class="article-util">
+            <ul class="article-util-list">
+                <li>
+                    <a class="link-modify-article" href="">수정</a>
+                </li>
+                <li>
+                    <a class="link-delete-article" href="/api/questions/{{question.id}}/answers/{{id}}">삭제</a>
+                </li>
+            </ul>
+        </div>
+        ```
+    * 답변 추가 템플릿 영역의 삭제 버튼 url 설정
+        ```xml
+        <div class="article-util">
+            <ul class="article-util-list">
+                <li>
+                    <a class="link-modify-article" href="">수정</a>
+                </li>
+                <li>
+                    <a class="link-delete-article" href="/api/questions/{3}/answers/{4}">삭제</a>
+                </li>
+            </ul>
+        </div>
+        ```
+        
+* script.js
+    ```js
+    // 답변삭제 클릭 이벤트 발생시 deleteAnswer 함수 호출
+    $(".qna-comment").on('click', '.link-delete-article', deleteAnswer);
+    // 답변삭제 AJAX 요청 처리를 위한 함수
+    function deleteAnswer(e) {
+        e.preventDefault(); // a태그 기본효과 방지
+        var deleteBtn = $(this);
+        var url = deleteBtn.attr("href");
+        $.ajax({
+            type : 'delete',
+            url : url,
+            dataType : 'json',
+            error : function (xhr, status) {
+                console.log("error");
+            },
+            success : function (data, status) {
+                console.log(data);
+                if (data.valid) {
+                    deleteBtn.closest("article").remove();
+                } else {
+                    alert(data.errorMsg);
+                }
+            }
+        });
+    }
+    ```
+
+### 6-3 질문 목록에 답변 수 보여주기 기능 추가
+### 6-4 중복 제거 및 리팩토링
+### 6-5 JSON API 추가 및 테스트
+### 6-6 쉘 스크립트를 활용해 배포 자동화
 
 
 
