@@ -1796,8 +1796,79 @@
     ```
 
 ### 6-3 질문 목록에 답변 수 보여주기 기능 추가
+* 답변의 숫자를 count 쿼리를 사용하지 않고 DB에 저장하여 관리하기
+    * Question 클래스 : `conutOfAnswer` 필드 추가, `addAnswer()`, `deleteAnswer()` 메서드 추가
+    ```java
+    // 답변 수 필드를 추가하고 0으로 초기화
+    @JsonProperty
+    private Integer countOfAnswer = 0;
+
+    // 답변 수 증가 메서드
+    public void addAnswer() {
+        this.countOfAnswer += 1;
+    }
+
+    // 답변 수 감소 메서드
+    public void deleteAnswer() {
+        this.countOfAnswer -= 1;
+    }
+    ```
+* ApiAnswerController : 답변을 추가하거나 삭제할 때 해당 질문의 답변의 숫자를 증가시키거나, 감소 시킨다.
+    ```java
+    // 답변 하기
+    @PostMapping
+    public  Answer create(@PathVariable Long questionId, String contents, HttpSession session) {
+        // 로그인되어 있지 않으면 로그인 페이지로
+        if ( !HttpSessionUtils.isLoginUser(session) ) {
+            return null;
+        }
+        // 로그인된 회원의 정보 가져오기
+        User loginUser = HttpSessionUtils.getUserFromSession(session);
+        Question question = questionRepository.findOne(questionId);
+        Answer answer = new Answer(loginUser, question, contents);
+        // 답변의 갯수 증가
+        question.addAnswer();
+        return answerRepository.save(answer);
+    }
+
+    // 답변 삭제하기
+    @DeleteMapping("/{id}")
+    public Result delete(@PathVariable Long questionId, @PathVariable Long id, HttpSession session) {
+        if ( !HttpSessionUtils.isLoginUser(session) ) {
+            return Result.fail("로그인해야 합니다.");
+        }
+
+        Answer answer = answerRepository.findOne(id);
+        User loginUser = HttpSessionUtils.getUserFromSession(session);
+        if ( !answer.isSameWriter(loginUser) ) {
+            return Result.fail("자신의 글만 삭제할 수 있습니다.");
+        }
+
+        answerRepository.delete(id);
+        Question question = questionRepository.findOne(questionId);
+        // 답변의 갯수 감소
+        question.deleteAnswer();
+        questionRepository.save(question);
+        return Result.ok();
+    }
+    ```
+* index.html : 답변의 갯수를 보여줄 위치에 코드 작성
+    ```xml
+    <div class="reply" title="댓글">
+        <i class="icon-reply"></i>
+        <span class="point">{{countOfAnswer}}</span>
+    </div>
+    ```
+* show.html : 답변의 갯수를 보여줄 위치에 동일하게 코드 작성
+    ```xml
+    <p class="qna-comment-count"><strong>{{countOfAnswer}}</strong>개의 의견</p>
+    ```
 ### 6-4 중복 제거 및 리팩토링
+
+
 ### 6-5 JSON API 추가 및 테스트
+
+
 ### 6-6 쉘 스크립트를 활용해 배포 자동화
 
 

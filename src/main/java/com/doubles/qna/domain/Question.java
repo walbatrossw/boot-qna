@@ -34,6 +34,10 @@ public class Question {
     @OrderBy("id DESC")  // 내림차순 정렬
     private List<Answer> answers;
 
+    @JsonProperty
+    private Integer countOfAnswer = 0;
+
+
     public Question() {
     }
 
@@ -64,6 +68,16 @@ public class Question {
         this.contents = contents;
     }
 
+    // 답변 수 증가 메서드
+    public void addAnswer() {
+        this.countOfAnswer += 1;
+    }
+
+    // 답변 수 감소 메서드
+    public void deleteAnswer() {
+        this.countOfAnswer -= 1;
+    }
+
     @Override
     public String toString() {
         return "Question{" +
@@ -74,4 +88,6 @@ public class Question {
                 ", createDate=" + createDate +
                 '}';
     }
+
+
 }
