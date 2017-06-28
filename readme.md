@@ -1864,6 +1864,262 @@
     <p class="qna-comment-count"><strong>{{countOfAnswer}}</strong>개의 의견</p>
     ```
 ### 6-4 중복 제거 및 리팩토링
+* 도메인 클래스에 대한 중복 제거 및 리팩토링
+    * AbstractEntity 클래스
+    ```java
+    @MappedSuperclass
+    @EntityListeners(AuditingEntityListener.class)
+    public class AbstractEntity {
+    
+        @Id
+        @GeneratedValue
+        @JsonProperty
+        private Long id; // id
+    
+        public Long getId() {
+            return id;
+        }
+    
+        @CreatedDate // 최초 생성시간
+        private LocalDateTime createDate;
+    
+        @LastModifiedDate   // 최종 수정된 시간
+        private LocalDateTime modifiedDate;
+    
+        // 생성시간 포맷변경 메서드
+        public String getFormattedCreateDate() {
+            return getFormattedDate(createDate, "yyyy.MM.dd HH:mm:ss");
+        }
+    
+        // 수정시간 포맷변경 메서드
+        public String getFormattedModifiedDate() {
+            return getFormattedDate(modifiedDate, "yyyy.MM.dd HH:mm:ss");
+        }
+    
+        private String getFormattedDate(LocalDateTime dateTime, String format) {
+            if (dateTime == null) {
+                return "";
+            }
+            return dateTime.format(DateTimeFormatter.ofPattern(format));
+        }
+    
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+    
+            AbstractEntity that = (AbstractEntity) o;
+    
+            return id != null ? id.equals(that.id) : that.id == null;
+        }
+    
+        @Override
+        public int hashCode() {
+            return id != null ? id.hashCode() : 0;
+        }
+    
+        @Override
+        public String toString() {
+            return "AbstractEntity{" +
+                    "id=" + id +
+                    ", createDate=" + createDate +
+                    ", modifiedDate=" + modifiedDate +
+                    '}';
+        }
+    }
+    ```
+    
+    * BootQanApplication 클래스
+    ```java
+    @SpringBootApplication
+    @EnableJpaAuditing
+    public class BootQnaApplication {
+    
+    	public static void main(String[] args) {
+    		SpringApplication.run(BootQnaApplication.class, args);
+    	}
+    }
+    ```
+    * User 클래스 
+    ```java
+    @Entity
+    public class User extends AbstractEntity {
+    
+        @Column(nullable = false, length = 20, unique = true)
+        @JsonProperty
+        private String userId;      // 회원 아이디
+    
+        @JsonIgnore
+        private String password;    // 비밀번호
+    
+        @JsonProperty
+        private String name;        // 회원 이름
+    
+        @JsonProperty
+        private String email;       // 회원 이메일
+    
+        public void setUserId(String userId) {
+            this.userId = userId;
+        }
+    
+        public void setPassword(String password) {
+            this.password = password;
+        }
+    
+        public void setName(String name) {
+            this.name = name;
+        }
+    
+        public void setEmail(String email) {
+            this.email = email;
+        }
+    
+        // 아이디 일치확인 메서드
+        public boolean matchId(Long newId) {
+            if ( newId == null ) {
+                return false;
+            }
+            return newId.equals(getId());
+        }
+    
+        // 비밀번호 일치확인 매서드
+        public boolean matchPassword(String newPassword) {
+            if ( newPassword == null ) {
+                return false;
+            }
+            return newPassword.equals(password);
+        }
+    
+        // Update() 메서드
+        public void update(User updatedUser) {
+            this.email = updatedUser.email;
+            this.name = updatedUser.name;
+            this.password = updatedUser.password;
+        }
+    
+        @Override
+        public String toString() {
+            return "User{"+ super.toString() +
+                    "userId='" + userId + '\'' +
+                    ", password='" + password + '\'' +
+                    ", name='" + name + '\'' +
+                    ", email='" + email + '\'' +
+                    '}';
+        }
+    }
+    ```
+    
+    * Question 클래스
+    ```java
+    @Entity
+    public class Question extends AbstractEntity {
+    
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_question_writer"))
+        @JsonProperty
+        private User writer;
+    
+        @JsonProperty
+        private String title;
+    
+        @Lob
+        @JsonProperty
+        private String contents;
+    
+        @OneToMany(mappedBy = "question")
+        @OrderBy("id DESC")
+        private List<Answer> answers;
+    
+        @JsonProperty
+        private Integer countOfAnswer = 0;
+    
+        public Question() {
+        }
+    
+        public Question(User writer, String title, String contents) {
+            this.writer = writer;
+            this.title = title;
+            this.contents = contents;
+        }
+    
+        // 로그인유저와 글작성자 비교
+        public boolean isSameWriter(User loginUser) {
+            return this.writer.equals(loginUser);
+        }
+    
+        // update 메서드
+        public void update(String title, String contents) {
+            this.title = title;
+            this.contents = contents;
+        }
+    
+        // 답변 수 증가 메서드
+        public void addAnswer() {
+            this.countOfAnswer += 1;
+        }
+    
+        // 답변 수 감소 메서드
+        public void deleteAnswer() {
+            this.countOfAnswer -= 1;
+        }
+    
+        @Override
+        public String toString() {
+            return "Question{" + super.toString() +
+                    "writer=" + writer +
+                    ", title='" + title + '\'' +
+                    ", contents='" + contents + '\'' +
+                    ", answers=" + answers +
+                    ", countOfAnswer=" + countOfAnswer +
+                    '}';
+        }
+    }
+    ```
+    
+    * Answer 클래스
+    ```java
+    @Entity
+    public class Answer extends AbstractEntity{
+    
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_writer"))
+        @JsonProperty
+        private User writer;
+    
+        @Lob // 255자가 넘는 String 타입일 경우 애노테이션 추가
+        @JsonProperty
+        private String contents;
+    
+        @ManyToOne
+        @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_question"))
+        @JsonProperty
+        private Question question;
+    
+        // 기본 생성자
+        public Answer() {
+        }
+    
+        // 생성자
+        public Answer(User writer, Question question, String contents) {
+            this.writer = writer;
+            this.contents = contents;
+            this.question = question;
+        }
+    
+        public boolean isSameWriter(User loginUser) {
+            return loginUser.equals(this.writer);
+        }
+    
+        @Override
+        public String toString() {
+            return "Answer{" + super.toString() +
+                    "writer=" + writer +
+                    ", contents='" + contents + '\'' +
+                    ", question=" + question +
+                    '}';
+        }
+    }
+    ```
 
 
 ### 6-5 JSON API 추가 및 테스트

@@ -7,12 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Entity
-public class Answer {
-
-    @Id
-    @GeneratedValue
-    @JsonProperty
-    private Long id;
+public class Answer extends AbstractEntity{
 
     @ManyToOne
     @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_writer"))
@@ -23,8 +18,6 @@ public class Answer {
     @JsonProperty
     private String contents;
 
-    private LocalDateTime createDate;
-
     @ManyToOne
     @JoinColumn(foreignKey = @ForeignKey(name = "fk_answer_question"))
     @JsonProperty
@@ -32,7 +25,6 @@ public class Answer {
 
     // 기본 생성자
     public Answer() {
-
     }
 
     // 생성자
@@ -40,48 +32,18 @@ public class Answer {
         this.writer = writer;
         this.contents = contents;
         this.question = question;
-        this.createDate =  LocalDateTime.now();
-    }
-
-    // 시간 포맷변경 메서드
-    public String getFormattedCreateDate() {
-        if (createDate == null) {
-            return "";
-        }
-        return createDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss"));
     }
 
     public boolean isSameWriter(User loginUser) {
         return loginUser.equals(this.writer);
     }
 
-    // equals() 메서드 오버라이딩
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Answer answer = (Answer) o;
-
-        return id != null ? id.equals(answer.id) : answer.id == null;
-    }
-
-    // hashCode() 메서드 오버라이딩
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
-
-    // toString() 메서드
     @Override
     public String toString() {
-        return "Answer{" +
-                "id=" + id +
-                ", writer=" + writer +
+        return "Answer{" + super.toString() +
+                "writer=" + writer +
                 ", contents='" + contents + '\'' +
-                ", createDate=" + createDate +
+                ", question=" + question +
                 '}';
     }
-
-
 }
